@@ -1,0 +1,3 @@
+legacy_url,new_url,redirect_type,notes
+https://example.myshopify.com/collections/sale,https://www.example.com/shop/sale,301,collection redirect
+https://example.myshopify.com/products/widget,https://www.example.com/shop/widget,301,product redirect

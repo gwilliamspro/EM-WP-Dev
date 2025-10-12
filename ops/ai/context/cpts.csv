@@ -1,0 +1,28 @@
+name,label,public,show_in_rest
+post,Posts,1,1
+page,Pages,1,1
+attachment,Media,1,1
+revision,Revisions,,
+nav_menu_item,"Navigation Menu Items",,1
+custom_css,"Custom CSS",,
+customize_changeset,Changesets,,
+oembed_cache,"oEmbed Responses",,
+user_request,"User Requests",,
+wp_block,Patterns,,1
+wp_template,Templates,,1
+wp_template_part,"Template Parts",,1
+wp_global_styles,"Global Styles",,1
+wp_navigation,"Navigation Menus",,1
+wp_font_family,"Font Families",,1
+wp_font_face,"Font Faces",,1
+kadence_form,Forms,,1
+kadence_navigation,"Kadence Navigation",,1
+kadence_header,"Kadence Header",,1
+product,Products,1,1
+product_variation,Variations,,
+shop_order,Orders,,
+shop_order_refund,Refunds,,
+shop_coupon,Coupons,,
+shop_order_placehold,Posts,,
+kadence_lottie,"Lottie Animations",,1
+kadence_vector,"Vector SVGs",,1

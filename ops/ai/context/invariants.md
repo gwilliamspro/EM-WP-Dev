@@ -1,0 +1,12 @@
+## [Bootstrap $(date +%F)]
+- Runtime: PHP 8.x; Node 20 for build tooling
+- WordPress: WP-CLI preferred for repeatable ops; DB: MySQL/MariaDB
+- Theme: child/custom in wp-content/themes/<project>; version in git
+- Plugins: keep lean; record name/version/purpose in plugins.md
+- Content model: prefer CPTs + taxonomies for structured content
+- ACF: centralize groups; commit JSON via acf-json when used
+- Media: no hotlinking to Shopify; stable filenames; consider CDN/offload
+- URLs: final permalinks stable; 301 for each legacy Shopify URL
+- SEO parity: preserve/improve title, meta, canonical, schema, OG/Twitter
+- Build: use npm scripts only; no sudo or global tools
+- Security: no secrets in repo; use .env/wp-config local includes

@@ -1,0 +1,15 @@
+name,object_type,public,show_in_rest
+category,post,1,1
+post_tag,post,1,1
+nav_menu,nav_menu_item,,1
+post_format,post,1,
+wp_theme,"wp_template, wp_template_part, wp_global_styles",,
+wp_template_part_area,wp_template_part,,
+wp_pattern_category,wp_block,,1
+wc_square_synced,product,1,
+product_brand,product,1,1
+product_type,product,,
+product_visibility,"product, product_variation",,
+product_cat,product,1,1
+product_tag,product,1,1
+product_shipping_class,"product, product_variation",1,
