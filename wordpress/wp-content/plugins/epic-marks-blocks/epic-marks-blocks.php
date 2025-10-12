@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Epic Marks Custom Blocks
  * Description: Custom Gutenberg blocks for Epic Marks website (Wave, Countdown, USP, Service Showcase)
- * Version: 1.1.0
+ * Version: 1.2.0
  * Author: Epic Marks Development Team
  */
 
@@ -509,6 +509,7 @@ class Epic_Marks_Blocks {
 
     public function render_showcase_block($attributes, $content) {
         $title = isset($attributes['title']) ? $attributes['title'] : '';
+        $hide_title = isset($attributes['hideTitle']) ? $attributes['hideTitle'] : false;
         $columns = isset($attributes['columns']) ? intval($attributes['columns']) : 3;
         $image_aspect_desktop = isset($attributes['imageAspectDesktop']) ? $attributes['imageAspectDesktop'] : '1/1';
         $image_aspect_mobile = isset($attributes['imageAspectMobile']) ? $attributes['imageAspectMobile'] : '1/1';
@@ -532,7 +533,7 @@ class Epic_Marks_Blocks {
                        --text-lines: <?php echo esc_attr($text_max_lines); ?>;
                        --img-fit: <?php echo esc_attr($image_fit); ?>;">
 
-                <?php if (!empty($title)): ?>
+                <?php if (!empty($title) && !$hide_title): ?>
                     <h2 class="em-svc-showcase__title"><?php echo esc_html($title); ?></h2>
                 <?php endif; ?>
 

@@ -4,10 +4,11 @@ Custom Gutenberg blocks for the Epic Marks WordPress site, built to match the br
 
 ## Overview
 
-This plugin provides three custom Gutenberg blocks designed specifically for Epic Marks:
+This plugin provides four custom Gutenberg blocks designed specifically for Epic Marks:
 - **Wave Block**: Animated SVG wave dividers with customizable styling
 - **Countdown Block**: Full-width urgency banner for same-day shipping deadlines
 - **USP Block**: Unique Selling Point feature blocks with icon/emoji support
+- **Service Showcase Block**: Product/service cards with pricing, images, and reorderable layout
 
 All blocks are server-side rendered for optimal performance and include comprehensive styling controls via the WordPress block editor.
 
@@ -16,9 +17,9 @@ All blocks are server-side rendered for optimal performance and include comprehe
 ### Plugin Structure
 ```
 epic-marks-blocks/
-├── epic-marks-blocks.php    # Main plugin file (v1.0.8)
+├── epic-marks-blocks.php    # Main plugin file (v1.2.0)
 ├── assets/
-│   ├── blocks.js            # Block registration and editor UI (642 lines)
+│   ├── blocks.js            # Block registration and editor UI (1050+ lines)
 │   ├── blocks.css           # Frontend and editor styles (87 lines)
 │   └── countdown-timer.js   # Countdown timer logic (187 lines, 5.2 KB)
 └── README.md                # This documentation
@@ -30,7 +31,8 @@ epic-marks-blocks/
 - **Styling System**: Inline styles for dynamic attributes, CSS classes for static styles
 - **Color Picker**: Integrated with WordPress theme color palette
 - **Dynamic Countdown**: Real-time JavaScript timer with timezone-aware calculations
-- **Version**: 1.0.8
+- **Card Reordering**: Move up/down controls for showcase cards
+- **Version**: 1.2.0
 
 ## Block Reference
 
@@ -313,6 +315,93 @@ boxShadow: true
 [Row with 3 USP Blocks]
 📦 SAME-DAY SHIPPING    |    ✓ PRO QUALITY    |    🎨 CUSTOM DESIGN
 ```
+
+---
+
+### 4. Service Showcase Block (`epic-marks/showcase-block`)
+
+Display product or service offerings in a responsive card grid with pricing tables, images, and CTAs.
+
+**Attributes:**
+- `title`: Section title (default: "Shop Sublimation")
+- `hideTitle`: Hide the section title (default: false)
+- `columns`: Number of columns in grid (2-4, default: 3)
+- `imageAspectDesktop`: Image aspect ratio on desktop (1/1, 4/3, 3/2, 16/9)
+- `imageAspectMobile`: Image aspect ratio on mobile (1/1, 4/3, 3/2, 16/9)
+- `imageFit`: Image object-fit (cover or contain, default: cover)
+- `headingMaxLines`: Max lines for card heading (1-3, default: 2)
+- `textMaxLines`: Max lines for description (0 = unlimited, default: 0)
+- `cards`: Array of card objects with product/service details
+
+**Card Attributes:**
+- `heading`: Card title
+- `description`: Card description text
+- `image`: Main image object (url, alt, width, height)
+- `hoverImage`: Optional hover image
+- `showNewBadge`: Display "NEW" badge (default: false)
+- `newBadgeLabel`: Custom badge text (default: "NEW")
+- `newBadgeColor`: Badge background color (default: #454C57)
+- `priceList`: Array of size/price objects
+- `showSizeRange`: Display size range summary (default: true)
+- `showFromBadge`: Display "From $X" badge (default: true)
+- `fromBadgeColor`: "From" badge color (default: #627A94)
+- `openSizes`: Expand pricing by default (default: false)
+- `ctaLabel`: Button text
+- `ctaLink`: Button URL
+
+**Advanced Features:**
+- **Card Reordering**: Use ↑ and ↓ arrow buttons to reorder cards in the editor
+- **Title Visibility**: Toggle to hide section title while keeping it for screen readers
+- **Responsive Images**: Separate aspect ratios for desktop and mobile
+- **Hover Images**: Optional second image on card hover
+- **Dynamic Pricing**: Auto-calculates minimum price from price list
+- **Collapsible Pricing**: Sizes/prices expand/collapse with details element
+
+**Usage Example:**
+```html
+<!-- 3-column service showcase -->
+title: "Sublimation Services"
+hideTitle: false
+columns: 3
+imageAspectDesktop: "1/1"
+imageFit: "cover"
+headingMaxLines: 2
+textMaxLines: 3
+
+Card 1:
+  heading: "Mugs"
+  description: "Premium ceramic mugs with vibrant sublimation"
+  image: {url: "/uploads/mugs.jpg"}
+  hoverImage: {url: "/uploads/mugs-hover.jpg"}
+  showNewBadge: true
+  priceList: [
+    {size: "11oz", price: 12.99},
+    {size: "15oz", price: 14.99}
+  ]
+  ctaLabel: "Shop Mugs"
+  ctaLink: "/product-category/mugs"
+```
+
+**Card Reordering Workflow:**
+1. Add multiple cards to showcase block
+2. Click ↑ arrow to move card up in order
+3. Click ↓ arrow to move card down in order
+4. Arrows auto-disable at first/last position
+5. Changes reflect immediately in editor and frontend
+
+**Technical Notes:**
+- Cards stored in ordered array in block attributes
+- Reorder uses array swap algorithm (no drag library required)
+- Server-side rendering maintains card order
+- CSS Grid responsive layout (auto-stacks on mobile)
+- `details` element for native collapsible pricing
+- Image lazy loading for performance
+
+**Common Use Cases:**
+- Product category showcases
+- Service offerings grid
+- Pricing comparison layouts
+- Featured products section
 
 ---
 
@@ -643,6 +732,8 @@ Update version in plugin header (line 5 of `epic-marks-blocks.php`):
 
 **Planned Features:**
 - [x] Dynamic countdown timer with JavaScript (real-time updates) - **COMPLETED v1.0.8**
+- [x] Service Showcase card reordering - **COMPLETED v1.2.0**
+- [x] Service Showcase title visibility toggle - **COMPLETED v1.2.0**
 - [ ] Wave block presets (common color combinations)
 - [ ] USP block icon library (pre-curated emoji/icon sets)
 - [ ] Animation timing controls (custom easing curves)
@@ -660,6 +751,13 @@ Update version in plugin header (line 5 of `epic-marks-blocks.php`):
 ---
 
 ## Version History
+
+**v1.2.0** (2025-10-12)
+- Add card reordering controls to Service Showcase block (move up/down arrows)
+- Add hideTitle toggle to Service Showcase block for title visibility control
+- Update showcase block editor preview to reflect title visibility
+- Improve card management UX with disabled state for first/last cards
+- Update plugin documentation with showcase block features
 
 **v1.0.8** (2025-10-12)
 - Add dynamic countdown timer with live JavaScript updates
@@ -725,7 +823,7 @@ Check logs: `/wordpress/wp-content/debug.log`
 ---
 
 **Last Updated:** 2025-10-12
-**Plugin Version:** 1.0.8
+**Plugin Version:** 1.2.0
 **WordPress Version:** 6.4+
 **Minimum PHP:** 7.4
 **Countdown Timer:** America/Chicago timezone (Central Time)

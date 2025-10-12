@@ -678,6 +678,10 @@
                 type: 'string',
                 default: 'Shop Sublimation'
             },
+            hideTitle: {
+                type: 'boolean',
+                default: false
+            },
             columns: {
                 type: 'number',
                 default: 3
@@ -766,6 +770,24 @@
                 setAttributes({ cards: newCards });
             }
 
+            function moveCardUp(index) {
+                if (index === 0) return;
+                var newCards = attributes.cards.slice();
+                var temp = newCards[index];
+                newCards[index] = newCards[index - 1];
+                newCards[index - 1] = temp;
+                setAttributes({ cards: newCards });
+            }
+
+            function moveCardDown(index) {
+                if (index === attributes.cards.length - 1) return;
+                var newCards = attributes.cards.slice();
+                var temp = newCards[index];
+                newCards[index] = newCards[index + 1];
+                newCards[index + 1] = temp;
+                setAttributes({ cards: newCards });
+            }
+
             return el(
                 Fragment,
                 {},
@@ -779,6 +801,11 @@
                             label: __('Section Title', 'epic-marks'),
                             value: attributes.title,
                             onChange: function(value) { setAttributes({ title: value }); }
+                        }),
+                        el(ToggleControl, {
+                            label: __('Hide Title', 'epic-marks'),
+                            checked: attributes.hideTitle,
+                            onChange: function(value) { setAttributes({ hideTitle: value }); }
                         }),
                         el(RangeControl, {
                             label: __('Columns', 'epic-marks'),
@@ -844,9 +871,9 @@
                         style: { border: '2px dashed #ccc', padding: '20px', borderRadius: '4px' }
                     },
                     el('div', { style: { textAlign: 'center', marginBottom: '20px' } },
-                        el('h3', { style: { margin: '0 0 10px 0', color: '#1e1e1e' } }, attributes.title || 'Service Showcase'),
+                        !attributes.hideTitle ? el('h3', { style: { margin: '0 0 10px 0', color: '#1e1e1e' } }, attributes.title || 'Service Showcase') : null,
                         el('p', { style: { margin: '0 0 10px 0', fontSize: '12px', color: '#666' } },
-                            attributes.cards.length + ' cards | ' + attributes.columns + ' columns'
+                            attributes.cards.length + ' cards | ' + attributes.columns + ' columns' + (attributes.hideTitle ? ' | Title Hidden' : '')
                         ),
                         el(Button, {
                             isPrimary: true,
@@ -866,13 +893,29 @@
                                     background: '#f9f9f9'
                                 }
                             },
-                            el('div', { style: { display: 'flex', justifyContent: 'space-between', marginBottom: '10px' } },
+                            el('div', { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' } },
                                 el('h4', { style: { margin: 0, color: '#1e1e1e' } }, __('Card ', 'epic-marks') + (cardIndex + 1)),
-                                el(Button, {
-                                    isDestructive: true,
-                                    isSmall: true,
-                                    onClick: function() { removeCard(cardIndex); }
-                                }, __('Remove', 'epic-marks'))
+                                el('div', { style: { display: 'flex', gap: '5px' } },
+                                    el(Button, {
+                                        isSmall: true,
+                                        onClick: function() { moveCardUp(cardIndex); },
+                                        disabled: cardIndex === 0,
+                                        icon: 'arrow-up-alt2',
+                                        label: __('Move Up', 'epic-marks')
+                                    }),
+                                    el(Button, {
+                                        isSmall: true,
+                                        onClick: function() { moveCardDown(cardIndex); },
+                                        disabled: cardIndex === attributes.cards.length - 1,
+                                        icon: 'arrow-down-alt2',
+                                        label: __('Move Down', 'epic-marks')
+                                    }),
+                                    el(Button, {
+                                        isDestructive: true,
+                                        isSmall: true,
+                                        onClick: function() { removeCard(cardIndex); }
+                                    }, __('Remove', 'epic-marks'))
+                                )
                             ),
                             el(TextControl, {
                                 label: __('Heading', 'epic-marks'),
