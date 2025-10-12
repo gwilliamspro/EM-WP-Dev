@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Epic Marks Custom Blocks
  * Description: Custom Gutenberg blocks for Epic Marks website
- * Version: 1.0.6
+ * Version: 1.0.8
  * Author: Epic Marks Development Team
  */
 
@@ -16,6 +16,223 @@ class Epic_Marks_Blocks {
         add_action('init', array($this, 'register_blocks'));
         add_action('enqueue_block_editor_assets', array($this, 'enqueue_editor_assets'));
         add_action('wp_enqueue_scripts', array($this, 'enqueue_frontend_assets'));
+        add_action('admin_menu', array($this, 'add_settings_page'));
+        add_action('admin_init', array($this, 'register_settings'));
+    }
+
+    /**
+     * Add settings page to WordPress admin
+     */
+    public function add_settings_page() {
+        add_options_page(
+            'Countdown Timer Settings',
+            'Countdown Timer',
+            'manage_options',
+            'em-countdown-settings',
+            array($this, 'render_settings_page')
+        );
+    }
+
+    /**
+     * Register all countdown settings
+     */
+    public function register_settings() {
+        // Cutoff time settings
+        register_setting('em_countdown_settings', 'em_countdown_cutoff_hour', array(
+            'type' => 'integer',
+            'default' => 14,
+            'sanitize_callback' => 'absint'
+        ));
+
+        register_setting('em_countdown_settings', 'em_countdown_cutoff_minute', array(
+            'type' => 'integer',
+            'default' => 0,
+            'sanitize_callback' => 'absint'
+        ));
+
+        // Close on Sunday setting
+        register_setting('em_countdown_settings', 'em_countdown_close_sunday', array(
+            'type' => 'boolean',
+            'default' => true
+        ));
+
+        // Holiday dates
+        register_setting('em_countdown_settings', 'em_countdown_holidays', array(
+            'type' => 'string',
+            'default' => '2025-01-01, 2025-07-04, 2025-11-27, 2025-12-25',
+            'sanitize_callback' => 'sanitize_textarea_field'
+        ));
+
+        // Extra closed dates
+        register_setting('em_countdown_settings', 'em_countdown_extra_closed', array(
+            'type' => 'string',
+            'default' => '',
+            'sanitize_callback' => 'sanitize_textarea_field'
+        ));
+
+        // Message templates
+        register_setting('em_countdown_settings', 'em_countdown_msg_active', array(
+            'type' => 'string',
+            'default' => 'Order in {time} to ship today (by {cutoff}).',
+            'sanitize_callback' => 'sanitize_text_field'
+        ));
+
+        register_setting('em_countdown_settings', 'em_countdown_msg_after', array(
+            'type' => 'string',
+            'default' => 'Orders after 2 PM ship next business day ({date} by {time}).',
+            'sanitize_callback' => 'sanitize_text_field'
+        ));
+
+        register_setting('em_countdown_settings', 'em_countdown_msg_closed', array(
+            'type' => 'string',
+            'default' => 'Closed today — orders process {date} by {time}.',
+            'sanitize_callback' => 'sanitize_text_field'
+        ));
+
+        // Temporary override
+        register_setting('em_countdown_settings', 'em_countdown_override', array(
+            'type' => 'boolean',
+            'default' => false
+        ));
+
+        register_setting('em_countdown_settings', 'em_countdown_override_msg', array(
+            'type' => 'string',
+            'default' => 'Temporarily closed — orders process next business day.',
+            'sanitize_callback' => 'sanitize_text_field'
+        ));
+
+        // Add settings sections
+        add_settings_section(
+            'em_countdown_section_cutoff',
+            'Cutoff Time Settings',
+            array($this, 'render_section_cutoff'),
+            'em-countdown-settings'
+        );
+
+        add_settings_section(
+            'em_countdown_section_closed',
+            'Closed Dates',
+            array($this, 'render_section_closed'),
+            'em-countdown-settings'
+        );
+
+        add_settings_section(
+            'em_countdown_section_messages',
+            'Message Templates',
+            array($this, 'render_section_messages'),
+            'em-countdown-settings'
+        );
+
+        add_settings_section(
+            'em_countdown_section_override',
+            'Temporary Override',
+            array($this, 'render_section_override'),
+            'em-countdown-settings'
+        );
+
+        // Add fields
+        add_settings_field('em_countdown_cutoff_hour', 'Cutoff Hour (0-23)', array($this, 'render_field_cutoff_hour'), 'em-countdown-settings', 'em_countdown_section_cutoff');
+        add_settings_field('em_countdown_cutoff_minute', 'Cutoff Minute (0-59)', array($this, 'render_field_cutoff_minute'), 'em-countdown-settings', 'em_countdown_section_cutoff');
+        add_settings_field('em_countdown_close_sunday', 'Close on Sundays', array($this, 'render_field_close_sunday'), 'em-countdown-settings', 'em_countdown_section_cutoff');
+
+        add_settings_field('em_countdown_holidays', 'US Holidays (YYYY-MM-DD)', array($this, 'render_field_holidays'), 'em-countdown-settings', 'em_countdown_section_closed');
+        add_settings_field('em_countdown_extra_closed', 'Additional Closed Dates', array($this, 'render_field_extra_closed'), 'em-countdown-settings', 'em_countdown_section_closed');
+
+        add_settings_field('em_countdown_msg_active', 'Before Cutoff Message', array($this, 'render_field_msg_active'), 'em-countdown-settings', 'em_countdown_section_messages');
+        add_settings_field('em_countdown_msg_after', 'After Cutoff Message', array($this, 'render_field_msg_after'), 'em-countdown-settings', 'em_countdown_section_messages');
+        add_settings_field('em_countdown_msg_closed', 'Closed Today Message', array($this, 'render_field_msg_closed'), 'em-countdown-settings', 'em_countdown_section_messages');
+
+        add_settings_field('em_countdown_override', 'Temporarily Closed', array($this, 'render_field_override'), 'em-countdown-settings', 'em_countdown_section_override');
+        add_settings_field('em_countdown_override_msg', 'Override Message', array($this, 'render_field_override_msg'), 'em-countdown-settings', 'em_countdown_section_override');
+    }
+
+    /**
+     * Render settings page
+     */
+    public function render_settings_page() {
+        ?>
+        <div class="wrap">
+            <h1>Countdown Timer Settings</h1>
+            <p>Configure the countdown timer that appears in the header. All times are in America/Chicago timezone (Central Time).</p>
+            <form method="post" action="options.php">
+                <?php
+                settings_fields('em_countdown_settings');
+                do_settings_sections('em-countdown-settings');
+                submit_button();
+                ?>
+            </form>
+        </div>
+        <?php
+    }
+
+    // Section descriptions
+    public function render_section_cutoff() {
+        echo '<p>Set the daily cutoff time for same-day processing (America/Chicago timezone).</p>';
+    }
+
+    public function render_section_closed() {
+        echo '<p>Enter dates in YYYY-MM-DD format, separated by commas or newlines.</p>';
+    }
+
+    public function render_section_messages() {
+        echo '<p>Use template variables: {time} (countdown), {date} (next open date), {cutoff} (cutoff time).</p>';
+    }
+
+    public function render_section_override() {
+        echo '<p>Use this to temporarily close the countdown with a custom message.</p>';
+    }
+
+    // Field renderers
+    public function render_field_cutoff_hour() {
+        $value = get_option('em_countdown_cutoff_hour', 14);
+        echo '<input type="number" name="em_countdown_cutoff_hour" value="' . esc_attr($value) . '" min="0" max="23" class="small-text"> (Default: 14 = 2:00 PM CT)';
+    }
+
+    public function render_field_cutoff_minute() {
+        $value = get_option('em_countdown_cutoff_minute', 0);
+        echo '<input type="number" name="em_countdown_cutoff_minute" value="' . esc_attr($value) . '" min="0" max="59" class="small-text"> (Default: 0 = :00)';
+    }
+
+    public function render_field_close_sunday() {
+        $value = get_option('em_countdown_close_sunday', true);
+        echo '<label><input type="checkbox" name="em_countdown_close_sunday" value="1" ' . checked($value, true, false) . '> Closed on Sundays</label>';
+    }
+
+    public function render_field_holidays() {
+        $value = get_option('em_countdown_holidays', '2025-01-01, 2025-07-04, 2025-11-27, 2025-12-25');
+        echo '<textarea name="em_countdown_holidays" rows="5" cols="50" class="large-text">'. esc_textarea($value) .'</textarea><br>';
+        echo '<em>Example: 2025-01-01, 2025-07-04, 2025-12-25</em>';
+    }
+
+    public function render_field_extra_closed() {
+        $value = get_option('em_countdown_extra_closed', '');
+        echo '<textarea name="em_countdown_extra_closed" rows="5" cols="50" class="large-text">'. esc_textarea($value) .'</textarea><br>';
+        echo '<em>Add special closed dates (vacations, company events, etc.)</em>';
+    }
+
+    public function render_field_msg_active() {
+        $value = get_option('em_countdown_msg_active', 'Order in {time} to ship today (by {cutoff}).');
+        echo '<input type="text" name="em_countdown_msg_active" value="' . esc_attr($value) . '" class="large-text">';
+    }
+
+    public function render_field_msg_after() {
+        $value = get_option('em_countdown_msg_after', 'Orders after 2 PM ship next business day ({date} by {time}).');
+        echo '<input type="text" name="em_countdown_msg_after" value="' . esc_attr($value) . '" class="large-text">';
+    }
+
+    public function render_field_msg_closed() {
+        $value = get_option('em_countdown_msg_closed', 'Closed today — orders process {date} by {time}.');
+        echo '<input type="text" name="em_countdown_msg_closed" value="' . esc_attr($value) . '" class="large-text">';
+    }
+
+    public function render_field_override() {
+        $value = get_option('em_countdown_override', false);
+        echo '<label><input type="checkbox" name="em_countdown_override" value="1" ' . checked($value, true, false) . '> Enable temporary closure message</label>';
+    }
+
+    public function render_field_override_msg() {
+        $value = get_option('em_countdown_override_msg', 'Temporarily closed — orders process next business day.');
+        echo '<input type="text" name="em_countdown_override_msg" value="' . esc_attr($value) . '" class="large-text">';
     }
 
     public function register_blocks() {
@@ -63,6 +280,14 @@ class Epic_Marks_Blocks {
             plugins_url('assets/blocks.css', __FILE__),
             array(),
             filemtime(plugin_dir_path(__FILE__) . 'assets/blocks.css')
+        );
+
+        wp_enqueue_script(
+            'epic-marks-countdown-timer',
+            plugins_url('assets/countdown-timer.js', __FILE__),
+            array(),
+            filemtime(plugin_dir_path(__FILE__) . 'assets/countdown-timer.js'),
+            true // Load in footer
         );
     }
 
@@ -186,8 +411,35 @@ class Epic_Marks_Blocks {
 
         $unique_id = 'countdown-' . uniqid();
 
+        // Get countdown settings from WordPress options
+        $cutoff_hour = get_option('em_countdown_cutoff_hour', 14);
+        $cutoff_minute = get_option('em_countdown_cutoff_minute', 0);
+        $close_sunday = get_option('em_countdown_close_sunday', true);
+        $holidays = get_option('em_countdown_holidays', '2025-01-01, 2025-07-04, 2025-11-27, 2025-12-25');
+        $extra_closed = get_option('em_countdown_extra_closed', '');
+        $msg_active = get_option('em_countdown_msg_active', 'Order in {time} to ship today (by {cutoff}).');
+        $msg_after = get_option('em_countdown_msg_after', 'Orders after 2 PM ship next business day ({date} by {time}).');
+        $msg_closed = get_option('em_countdown_msg_closed', 'Closed today — orders process {date} by {time}.');
+        $override = get_option('em_countdown_override', false);
+        $override_msg = get_option('em_countdown_override_msg', 'Temporarily closed — orders process next business day.');
+
         ob_start();
         ?>
+        <script>
+        window.EM_COUNTDOWN_CONFIG = {
+            tz: "America/Chicago",
+            cutoffHour: <?php echo intval($cutoff_hour); ?>,
+            cutoffMinute: <?php echo intval($cutoff_minute); ?>,
+            closeOnSunday: <?php echo $close_sunday ? 'true' : 'false'; ?>,
+            holidays: <?php echo json_encode($holidays); ?>,
+            extraClosed: <?php echo json_encode($extra_closed); ?>,
+            overrideClosed: <?php echo $override ? 'true' : 'false'; ?>,
+            overrideMessage: <?php echo json_encode($override_msg); ?>,
+            msgActive: <?php echo json_encode($msg_active); ?>,
+            msgAfter: <?php echo json_encode($msg_after); ?>,
+            msgClosed: <?php echo json_encode($msg_closed); ?>
+        };
+        </script>
         <div id="<?php echo $unique_id; ?>" class="em-countdown-banner" style="
             position: relative;
             width: 100vw;
