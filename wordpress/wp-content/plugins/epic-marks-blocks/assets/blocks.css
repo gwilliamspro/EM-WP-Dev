@@ -1,0 +1,87 @@
+/* Epic Marks Wave Block Styles */
+
+.em-wave-block-preview {
+    min-height: 100px;
+}
+
+/* Ensure parent HTML block doesn't add constraints */
+.wp-block[data-type=\"epic-marks/wave-block\"] {
+    margin-left: 0;
+    margin-right: 0;
+    max-width: none;
+}
+
+/* Frontend wave container styles */
+.em-wave-container {
+    position: relative;
+    overflow: hidden;
+}
+
+.em-wave-container svg {
+    display: block;
+}
+
+/* ========================================
+   USP BLOCKS HORIZONTAL LAYOUT
+   ======================================== */
+
+/* Individual USP block wrapper */
+.wp-block-epic-marks-usp-block {
+    display: inline-block !important;
+    vertical-align: top;
+    margin: 0 0.75rem 1.5rem 0.75rem !important;
+    width: 180px;
+    text-align: center;
+}
+
+/* USP item inside */
+.em-usp-item {
+    display: block;
+    width: 100%;
+    text-align: center;
+    box-sizing: border-box;
+}
+
+/* Create a wrapper div that centers USP blocks */
+/* This targets any direct parent that contains USP blocks */
+.entry-content > p:has(.wp-block-epic-marks-usp-block),
+.entry-content > div:has(.wp-block-epic-marks-usp-block),
+.wp-block-post-content > p:has(.wp-block-epic-marks-usp-block),
+.wp-block-post-content > div:has(.wp-block-epic-marks-usp-block),
+.wp-block-group__inner-container:has(.wp-block-epic-marks-usp-block) {
+    text-align: center !important;
+    font-size: 0 !important; /* Remove inline-block spacing */
+}
+
+/* Restore font size for USP blocks themselves */
+.wp-block-epic-marks-usp-block {
+    font-size: 1rem;
+}
+
+/* If USP blocks are direct children of entry-content (not wrapped), center them */
+.entry-content:has(> .wp-block-epic-marks-usp-block),
+.wp-block-post-content:has(> .wp-block-epic-marks-usp-block) {
+    text-align: center;
+    font-size: 0;
+}
+
+/* Reset text-align for non-USP blocks */
+.entry-content:has(> .wp-block-epic-marks-usp-block) > *:not(.wp-block-epic-marks-usp-block),
+.wp-block-post-content:has(> .wp-block-epic-marks-usp-block) > *:not(.wp-block-epic-marks-usp-block) {
+    text-align: left;
+    font-size: 1rem;
+}
+
+/* Mobile: Stack vertically */
+@media (max-width: 640px) {
+    .wp-block-epic-marks-usp-block {
+        display: block !important;
+        width: 100%;
+        max-width: 100%;
+        margin: 0 auto 1.5rem auto !important;
+    }
+
+    .em-usp-item {
+        max-width: 100%;
+    }
+}

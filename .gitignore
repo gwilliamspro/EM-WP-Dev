@@ -67,3 +67,8 @@ Thumbs.db
 
 # WP-CLI cache
 .wp-cli/cache/
+
+# Temporary session notes
+docs/active/*.md
+*-session-notes.md
+*-temp.md

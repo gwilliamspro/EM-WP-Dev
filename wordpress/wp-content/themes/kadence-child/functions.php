@@ -51,3 +51,16 @@ add_action( 'after_setup_theme', 'kadence_child_setup', 11 );
  * Security: Disable XML-RPC (common attack vector)
  */
 add_filter( 'xmlrpc_enabled', '__return_false' );
+
+/**
+ * Enqueue Inter font from Google Fonts
+ */
+function em_enqueue_inter_font() {
+    wp_enqueue_style(
+        'em-inter-font',
+        'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap',
+        array(),
+        null
+    );
+}
+add_action( 'wp_enqueue_scripts', 'em_enqueue_inter_font' );
