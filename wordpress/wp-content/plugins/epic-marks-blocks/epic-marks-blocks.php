@@ -1,8 +1,8 @@
 <?php
 /**
  * Plugin Name: Epic Marks Custom Blocks
- * Description: Custom Gutenberg blocks for Epic Marks website
- * Version: 1.0.8
+ * Description: Custom Gutenberg blocks for Epic Marks website (Wave, Countdown, USP, Service Showcase)
+ * Version: 1.1.0
  * Author: Epic Marks Development Team
  */
 
@@ -256,6 +256,13 @@ class Epic_Marks_Blocks {
             'style' => 'epic-marks-blocks-style',
             'render_callback' => array($this, 'render_usp_block')
         ));
+
+        // Register Showcase block
+        register_block_type('epic-marks/showcase-block', array(
+            'editor_script' => 'epic-marks-blocks',
+            'style' => 'epic-marks-blocks-style',
+            'render_callback' => array($this, 'render_showcase_block')
+        ));
     }
 
     public function enqueue_editor_assets() {
@@ -498,6 +505,160 @@ class Epic_Marks_Blocks {
         </div>
         <?php
         return ob_get_clean();
+    }
+
+    public function render_showcase_block($attributes, $content) {
+        $title = isset($attributes['title']) ? $attributes['title'] : '';
+        $columns = isset($attributes['columns']) ? intval($attributes['columns']) : 3;
+        $image_aspect_desktop = isset($attributes['imageAspectDesktop']) ? $attributes['imageAspectDesktop'] : '1/1';
+        $image_aspect_mobile = isset($attributes['imageAspectMobile']) ? $attributes['imageAspectMobile'] : '1/1';
+        $image_fit = isset($attributes['imageFit']) ? $attributes['imageFit'] : 'cover';
+        $heading_max_lines = isset($attributes['headingMaxLines']) ? intval($attributes['headingMaxLines']) : 2;
+        $text_max_lines = isset($attributes['textMaxLines']) ? intval($attributes['textMaxLines']) : 0;
+        $cards = isset($attributes['cards']) ? $attributes['cards'] : array();
+
+        $unique_id = 'showcase-' . uniqid();
+
+        ob_start();
+        ?>
+        <section class="em-svc-showcase"
+            role="region"
+            aria-label="Service showcase"
+            data-text-clamp="<?php echo esc_attr($text_max_lines); ?>">
+            <div class="em-svc-showcase__wrap"
+                style="--media-aspect-desktop: <?php echo esc_attr($image_aspect_desktop); ?>;
+                       --media-aspect-mobile: <?php echo esc_attr($image_aspect_mobile); ?>;
+                       --heading-lines: <?php echo esc_attr($heading_max_lines); ?>;
+                       --text-lines: <?php echo esc_attr($text_max_lines); ?>;
+                       --img-fit: <?php echo esc_attr($image_fit); ?>;">
+
+                <?php if (!empty($title)): ?>
+                    <h2 class="em-svc-showcase__title"><?php echo esc_html($title); ?></h2>
+                <?php endif; ?>
+
+                <div class="em-svc-showcase__grid em-svc--cols-<?php echo esc_attr($columns); ?><?php echo (count($cards) < $columns) ? ' is-compact' : ''; ?>">
+                    <?php foreach ($cards as $card):
+                        $this->render_showcase_card($card);
+                    endforeach; ?>
+                </div>
+            </div>
+        </section>
+        <?php
+        return ob_get_clean();
+    }
+
+    private function render_showcase_card($card) {
+        $image = isset($card['image']) ? $card['image'] : array();
+        $hover_image = isset($card['hoverImage']) ? $card['hoverImage'] : array();
+        $show_new_badge = isset($card['showNewBadge']) ? $card['showNewBadge'] : false;
+        $new_badge_label = isset($card['newBadgeLabel']) ? $card['newBadgeLabel'] : 'NEW';
+        $new_badge_color = isset($card['newBadgeColor']) ? $card['newBadgeColor'] : '#454C57';
+        $heading = isset($card['heading']) ? $card['heading'] : '';
+        $description = isset($card['description']) ? $card['description'] : '';
+        $price_list = isset($card['priceList']) ? $card['priceList'] : array();
+        $show_size_range = isset($card['showSizeRange']) ? $card['showSizeRange'] : true;
+        $show_from_badge = isset($card['showFromBadge']) ? $card['showFromBadge'] : true;
+        $from_badge_color = isset($card['fromBadgeColor']) ? $card['fromBadgeColor'] : '#627A94';
+        $open_sizes = isset($card['openSizes']) ? $card['openSizes'] : false;
+        $cta_label = isset($card['ctaLabel']) ? $card['ctaLabel'] : '';
+        $cta_link = isset($card['ctaLink']) ? $card['ctaLink'] : '';
+
+        // Calculate min price
+        $min_price = null;
+        if (!empty($price_list)) {
+            foreach ($price_list as $item) {
+                $price = isset($item['price']) ? floatval($item['price']) : 0;
+                if ($min_price === null || $price < $min_price) {
+                    $min_price = $price;
+                }
+            }
+        }
+        ?>
+        <article class="em-svc-card">
+            <?php if ($show_new_badge): ?>
+                <div class="em-chip" style="--chip-bg: <?php echo esc_attr($new_badge_color); ?>;">
+                    <?php echo esc_html($new_badge_label); ?>
+                </div>
+            <?php endif; ?>
+
+            <?php if (!empty($image['url'])): ?>
+                <div class="em-svc-card__media">
+                    <div class="em-media-layer em-media-layer--main">
+                        <img src="<?php echo esc_url($image['url']); ?>"
+                            alt="<?php echo esc_attr($image['alt'] ?? $heading); ?>"
+                            loading="lazy"
+                            class="em-layer-img"
+                            width="<?php echo isset($image['width']) ? intval($image['width']) : 600; ?>"
+                            height="<?php echo isset($image['height']) ? intval($image['height']) : 600; ?>">
+                    </div>
+                    <?php if (!empty($hover_image['url'])): ?>
+                        <div class="em-media-layer em-media-layer--hover">
+                            <img src="<?php echo esc_url($hover_image['url']); ?>"
+                                alt="<?php echo esc_attr($hover_image['alt'] ?? $heading); ?>"
+                                loading="lazy"
+                                class="em-layer-img"
+                                width="<?php echo isset($hover_image['width']) ? intval($hover_image['width']) : 600; ?>"
+                                height="<?php echo isset($hover_image['height']) ? intval($hover_image['height']) : 600; ?>">
+                        </div>
+                    <?php endif; ?>
+                </div>
+            <?php endif; ?>
+
+            <?php if (!empty($heading)): ?>
+                <h3 class="em-svc-card__heading"><?php echo esc_html($heading); ?></h3>
+            <?php endif; ?>
+
+            <?php if (!empty($description)): ?>
+                <div class="em-svc-card__text"><?php echo wp_kses_post($description); ?></div>
+            <?php endif; ?>
+
+            <?php if (!empty($price_list)): ?>
+                <?php
+                $first_size = isset($price_list[0]['size']) ? $price_list[0]['size'] : '';
+                $last_size = isset($price_list[count($price_list) - 1]['size']) ? $price_list[count($price_list) - 1]['size'] : '';
+                ?>
+                <div class="em-svc-card__pricing">
+                    <div class="em-svc-card__summary">
+                        <?php if ($show_size_range && $first_size && $last_size): ?>
+                            <div class="em-svc-card__range"><?php echo esc_html($first_size . ' - ' . $last_size); ?></div>
+                        <?php endif; ?>
+                        <?php if ($show_from_badge && $min_price !== null): ?>
+                            <div class="em-svc-card__fromline">
+                                <span class="em-badge em-badge--from" style="--from-badge-color: <?php echo esc_attr($from_badge_color); ?>;">
+                                    From $<?php echo number_format($min_price, 2); ?>
+                                </span>
+                            </div>
+                        <?php endif; ?>
+                    </div>
+
+                    <details class="em-svc-card__sizes" <?php echo $open_sizes ? 'open' : ''; ?>>
+                        <summary>
+                            <span class="em-size-toggle__label-default">View all sizes & prices</span>
+                            <span class="em-size-toggle__label-open">Hide sizes & prices</span>
+                        </summary>
+                        <ul class="em-svc-pricegrid" role="list">
+                            <?php foreach ($price_list as $item): ?>
+                                <?php if (!empty($item['size']) && isset($item['price'])): ?>
+                                    <li class="em-svc-pricegrid__row">
+                                        <span class="em-svc-pricegrid__size"><?php echo esc_html($item['size']); ?></span>
+                                        <span class="em-svc-pricegrid__price">$<?php echo number_format(floatval($item['price']), 2); ?></span>
+                                    </li>
+                                <?php endif; ?>
+                            <?php endforeach; ?>
+                        </ul>
+                    </details>
+                </div>
+            <?php endif; ?>
+
+            <div class="em-svc-card__footer">
+                <?php if (!empty($cta_label) && !empty($cta_link)): ?>
+                    <a href="<?php echo esc_url($cta_link); ?>" class="button em-svc-card__cta">
+                        <?php echo esc_html($cta_label); ?>
+                    </a>
+                <?php endif; ?>
+            </div>
+        </article>
+        <?php
     }
 }
 
