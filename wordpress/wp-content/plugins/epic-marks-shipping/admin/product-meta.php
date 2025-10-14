@@ -1,0 +1,146 @@
+<?php
+/**
+ * Product Shipping Meta Fields
+ *
+ * @package Epic_Marks_Shipping
+ */
+
+// Exit if accessed directly
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
+
+/**
+ * Add shipping fields to product data tabs
+ */
+function em_product_shipping_tab_content() {
+    global $post;
+    
+    // Get current product tags
+    $tags = wp_get_post_terms( $post->ID, 'product_tag', array( 'fields' => 'names' ) );
+    if ( is_wp_error( $tags ) ) {
+        $tags = array();
+    }
+    
+    // Determine location based on tags
+    $settings = get_option( 'em_ups_settings', array() );
+    $has_warehouse_tag = in_array( 'SSAW-App', $tags, true );
+    $has_store_tag = in_array( 'available-in-store', $tags, true );
+    
+    if ( $has_warehouse_tag && $has_store_tag ) {
+        $overlap_pref = $settings['overlap_preference'] ?? 'warehouse';
+        $location = $overlap_pref;
+        $location_note = sprintf(
+            __( 'Ships from: %s (both tags present, using preference setting)', 'epic-marks-shipping' ),
+            ucfirst( $overlap_pref )
+        );
+    } elseif ( $has_warehouse_tag ) {
+        $location = 'warehouse';
+        $location_note = __( 'Ships from: Warehouse (SSAW-App tag)', 'epic-marks-shipping' );
+    } elseif ( $has_store_tag ) {
+        $location = 'store';
+        $location_note = __( 'Ships from: Store (available-in-store tag)', 'epic-marks-shipping' );
+    } else {
+        $default_location = $settings['default_location'] ?? 'warehouse';
+        $location = $default_location;
+        $location_note = sprintf(
+            __( 'Ships from: %s (default - no location tags)', 'epic-marks-shipping' ),
+            ucfirst( $default_location )
+        );
+    }
+    
+    echo '<div class="options_group">';
+    
+    // Display location info
+    echo '<p class="form-field"><strong>' . esc_html( $location_note ) . '</strong></p>';
+    echo '<p class="form-field description">' 
+        . esc_html__( 'Location is determined by product tags: "SSAW-App" for warehouse, "available-in-store" for store.', 'epic-marks-shipping' )
+        . '</p>';
+    
+    // Markup enable checkbox
+    woocommerce_wp_checkbox( array(
+        'id' => '_em_enable_shipping_markup',
+        'label' => __( 'Enable Shipping Markup', 'epic-marks-shipping' ),
+        'description' => __( 'Add markup to shipping rates for this product', 'epic-marks-shipping' ),
+        'desc_tip' => true,
+    ) );
+    
+    // Markup type
+    woocommerce_wp_select( array(
+        'id' => '_em_markup_type',
+        'label' => __( 'Markup Type', 'epic-marks-shipping' ),
+        'options' => array(
+            'percentage' => __( 'Percentage', 'epic-marks-shipping' ),
+            'flat' => __( 'Flat Rate', 'epic-marks-shipping' )
+        ),
+        'desc_tip' => true,
+        'description' => __( 'Choose how markup is calculated', 'epic-marks-shipping' ),
+    ) );
+    
+    // Markup value
+    woocommerce_wp_text_input( array(
+        'id' => '_em_markup_value',
+        'label' => __( 'Markup Value', 'epic-marks-shipping' ),
+        'type' => 'number',
+        'custom_attributes' => array(
+            'step' => '0.01',
+            'min' => '0'
+        ),
+        'desc_tip' => true,
+        'description' => __( 'Enter percentage (e.g. 15 for 15%) or flat amount (e.g. 5.00 for $5)', 'epic-marks-shipping' ),
+    ) );
+    
+    echo '</div>';
+}
+add_action( 'woocommerce_product_options_shipping', 'em_product_shipping_tab_content' );
+
+/**
+ * Save product shipping meta
+ */
+function em_save_product_shipping_meta( $post_id ) {
+    // Enable markup checkbox
+    $enable_markup = isset( $_POST['_em_enable_shipping_markup'] ) ? 'yes' : 'no';
+    update_post_meta( $post_id, '_em_enable_shipping_markup', $enable_markup );
+    
+    // Markup type
+    if ( isset( $_POST['_em_markup_type'] ) ) {
+        $markup_type = sanitize_text_field( $_POST['_em_markup_type'] );
+        update_post_meta( $post_id, '_em_markup_type', $markup_type );
+    }
+    
+    // Markup value
+    if ( isset( $_POST['_em_markup_value'] ) ) {
+        $markup_value = floatval( $_POST['_em_markup_value'] );
+        update_post_meta( $post_id, '_em_markup_value', $markup_value );
+    }
+    
+    // Check if product weight is set
+    $product = wc_get_product( $post_id );
+    if ( $product && ! $product->get_weight() ) {
+        update_post_meta( $post_id, '_em_weight_warning', 'yes' );
+    } else {
+        delete_post_meta( $post_id, '_em_weight_warning' );
+    }
+}
+add_action( 'woocommerce_process_product_meta', 'em_save_product_shipping_meta' );
+
+/**
+ * Display weight warning if product has no weight
+ */
+function em_product_weight_warning() {
+    global $post;
+    
+    $has_warning = get_post_meta( $post->ID, '_em_weight_warning', true );
+    
+    if ( $has_warning === 'yes' ) {
+        ?>
+        <div class="notice notice-warning inline">
+            <p>
+                <strong><?php esc_html_e( 'Shipping Warning:', 'epic-marks-shipping' ); ?></strong>
+                <?php esc_html_e( 'This product has no weight set. A default weight of 1 lb will be used for UPS rate calculations.', 'epic-marks-shipping' ); ?>
+            </p>
+        </div>
+        <?php
+    }
+}
+add_action( 'edit_form_after_title', 'em_product_weight_warning' );
