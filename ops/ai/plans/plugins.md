@@ -81,9 +81,9 @@
 - **Description**: SEO optimization and XML sitemaps
 
 ### Newsletter
-- **Version**: 8.9.9
+- **Version**: 9.0.1
 - **Status**: Active
-- **Update Available**: 9.0.1
+- **Description**: Email newsletter subscription and campaign management
 
 ## Search & Navigation
 
@@ -170,6 +170,6 @@
 ## Notes
 
 - **Auto-updates**: Disabled for all plugins (manual updates preferred)
-- **Update Available**: Newsletter plugin has update 9.0.1 available
 - **Inactive Plugins**: Query Monitor and All-in-One WP Migration kept inactive in production
 - **Security**: All active plugins receive regular security updates
+- **File Permissions**: All plugins owned by `www-data:www-data` to prevent update failures

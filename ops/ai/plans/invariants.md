@@ -150,6 +150,22 @@
 1. **Directories**: 755 (`drwxr-xr-x`)
 2. **PHP Files**: 644 (`-rw-r--r-`)
 3. **Owner**: `www-data:www-data` (WordPress user)
+4. **Critical**: ALL plugins and themes MUST be owned by `www-data:www-data` to allow WordPress admin updates
+
+### WP-CLI Usage Rules
+
+1. **NEVER use sudo with --allow-root**: Files created as root cause permission issues
+2. **Use the wp alias**: `wp` (configured in `~/.bashrc`)
+3. **Alias command**: `docker exec -u www-data -w /var/www/html wordpress_app wp`
+4. **Benefits**:
+   - Files automatically created as `www-data:www-data`
+   - No permission errors during WordPress updates
+   - Shorter, cleaner commands
+5. **Examples**:
+   - Plugin list: `wp plugin list`
+   - Install plugin: `wp plugin install [name] --activate`
+   - Update plugins: `wp plugin update --all`
+   - Database export: `wp db export backup.sql`
 
 ### Code Quality Rules
 

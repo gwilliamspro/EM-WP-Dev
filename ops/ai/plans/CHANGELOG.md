@@ -2,6 +2,31 @@
 
 All notable changes to the Epic Marks WordPress site will be documented in this file.
 
+## [2025-10-14] - File Permission Fixes & WP-CLI Workflow Update
+
+### Fixed
+- **Plugin/Theme Update Failures** - Fixed permission errors preventing WordPress from updating plugins through admin interface
+- **Newsletter Plugin Updated** - Successfully updated from v8.9.9 to v9.0.1 after permission fix
+- **Mass Permission Correction** - Changed ownership of all plugins and themes from `root:root` to `www-data:www-data`
+
+### Changed
+- **WP-CLI Workflow** - Replaced `sudo docker exec wordpress_app wp --allow-root` with cleaner alias
+- **New wp Alias** - Added to `~/.bashrc`: runs WP-CLI as `www-data` user inside container automatically
+- **Documentation Updates** - Added WP-CLI usage rules to invariants.md, updated plugins.md with correct versions
+
+### Why These Changes
+- **Prevent Update Failures**: WordPress runs as `www-data` but couldn't overwrite root-owned files, causing "inconsistent file permissions" errors
+- **Eliminate Permission Issues**: All files created by WP-CLI now automatically owned by correct user
+- **Streamlined Commands**: New `wp` alias is shorter, cleaner, and prevents accidentally creating root-owned files
+- **Future-Proof**: Any plugin/theme installations or updates (via admin or WP-CLI) maintain correct permissions
+
+### Technical Details
+- Fixed: 17+ plugins, 1 theme (Kadence)
+- New alias: `docker exec -u www-data -w /var/www/html wordpress_app wp`
+- Location: `~/.bashrc` for user `webdev`
+
+---
+
 ## [2025-10-14] - Epic Marks Shipping Plugin v1.0.0
 
 ### Added
