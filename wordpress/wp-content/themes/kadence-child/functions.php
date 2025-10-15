@@ -64,3 +64,78 @@ function em_enqueue_inter_font() {
     );
 }
 add_action( 'wp_enqueue_scripts', 'em_enqueue_inter_font' );
+
+/**
+ * Set minimum password length to 8 characters
+ */
+function em_set_min_password_length( $errors, $user_data ) {
+    $password = isset( $_POST['pass1'] ) ? $_POST['pass1'] : '';
+
+    if ( ! empty( $password ) && strlen( $password ) < 8 ) {
+        $errors->add( 'pass', __( '<strong>Error</strong>: Password must be at least 8 characters long.' ) );
+    }
+
+    return $errors;
+}
+add_filter( 'user_profile_update_errors', 'em_set_min_password_length', 10, 2 );
+add_filter( 'registration_errors', 'em_set_min_password_length', 10, 2 );
+add_filter( 'validate_password_reset', 'em_set_min_password_length', 10, 2 );
+
+/**
+ * Reduce password strength requirement
+ * WordPress uses zxcvbn strength meter: 0 (weak) to 4 (strong)
+ * Setting to 1 allows weak passwords that meet minimum length
+ */
+add_filter( 'woocommerce_min_password_strength', function() {
+    return 1; // Allow weak passwords (just need 8+ characters)
+} );
+
+/**
+ * Disable WordPress default password strength enforcement
+ */
+add_action( 'admin_enqueue_scripts', function() {
+    wp_dequeue_script( 'wc-password-strength-meter' );
+}, 100 );
+
+add_action( 'wp_enqueue_scripts', function() {
+    wp_dequeue_script( 'wc-password-strength-meter' );
+}, 100 );
+
+/**
+ * Override WordPress password strength validation
+ * Remove strict password requirements and only enforce 8 character minimum
+ */
+add_filter( 'user_profile_update_errors', 'em_override_password_strength', 0, 3 );
+add_filter( 'registration_errors', 'em_override_password_strength', 0, 3 );
+add_filter( 'validate_password_reset', 'em_override_password_strength', 0, 3 );
+
+function em_override_password_strength( $errors, $update = null, $user = null ) {
+    // Remove any existing password strength errors
+    if ( isset( $errors->errors['pass'] ) ) {
+        foreach ( $errors->errors['pass'] as $key => $error ) {
+            // Remove strict password strength messages
+            if ( strpos( $error, 'stronger password' ) !== false || 
+                 strpos( $error, '12 characters' ) !== false ||
+                 strpos( $error, 'Uppercase' ) !== false ) {
+                unset( $errors->errors['pass'][$key] );
+            }
+        }
+        // Clean up empty arrays
+        if ( empty( $errors->errors['pass'] ) ) {
+            unset( $errors->errors['pass'] );
+        }
+    }
+    
+    return $errors;
+}
+
+/**
+ * Disable password strength meter JavaScript
+ */
+add_action( 'wp_print_scripts', function() {
+    wp_dequeue_script( 'password-strength-meter' );
+}, 100 );
+
+add_action( 'admin_print_scripts', function() {
+    wp_dequeue_script( 'password-strength-meter' );
+}, 100 );

@@ -30,6 +30,50 @@ This is a Dockerized WordPress development environment configured with MySQL 8.0
 - File ownership: WordPress files owned by `www-data:www-data`, some plugin files by `root:root`
 - Database credentials stored in docker-compose.yml environment variables
 
+### File Permissions & Ownership
+**CRITICAL:** All WordPress files must be owned by `www-data:www-data` to avoid permission errors.
+
+**For Claude Code AI Agent:**
+- ✅ **USE:** `Read` tool - works correctly for reading WordPress files
+- ✅ **USE:** `docker cp` + `docker exec -u www-data` pattern (see below) - for creating/modifying files
+- ✅ **USE:** `docker exec -u www-data wordpress_app <command>` - creates files with correct ownership
+- ✅ **USE:** Shell aliases: `wp`, `wp-exec`, `wp-bash` - pre-configured to run as www-data
+- ❌ **AVOID:** `Edit` and `Write` tools on WordPress files - will fail with EACCES permission errors
+- ❌ **AVOID:** `sudo docker exec` - creates root-owned files
+- ❌ **AVOID:** Direct file operations in `/home/webdev/EM-WP-Dev/wordpress/` - will fail due to www-data ownership
+
+**Working Pattern for Creating/Modifying WordPress Files:**
+```bash
+# 1. Create file in /tmp with heredoc
+cat > /tmp/myfile.php << 'EOF'
+<?php
+// File content here
+EOF
+
+# 2. Copy to container's /tmp
+docker cp /tmp/myfile.php wordpress_app:/tmp/
+
+# 3. Copy from container's /tmp to WordPress directory as www-data
+docker exec -u www-data wordpress_app cp /tmp/myfile.php /var/www/html/wp-content/plugins/myplugin/myfile.php
+
+# 4. Clean up host temp file
+rm /tmp/myfile.php
+```
+
+**Why this pattern?**
+- The `Edit` and `Write` tools cannot write to files owned by `www-data` when run from the host
+- Creating files in `/tmp` first, then copying via `docker exec -u www-data` ensures correct ownership
+- This is the **only reliable method** for Claude Code to create/modify WordPress plugin files
+
+**File ownership quick reference:**
+```bash
+# Check file ownership
+ls -la /home/webdev/EM-WP-Dev/wordpress/wp-content/plugins/
+
+# Fix ownership if needed (as last resort)
+docker exec wordpress_app chown -R www-data:www-data /var/www/html/wp-content/plugins/plugin-name
+```
+
 ## Development Commands
 
 ### Container Management
@@ -54,31 +98,49 @@ docker compose restart
 ```
 
 ### WP-CLI Commands
-WP-CLI is pre-installed in the custom WordPress image. Execute commands with `--allow-root`:
+WP-CLI is pre-installed in the custom WordPress image. **IMPORTANT:** Always run commands as `www-data` user to maintain correct file ownership.
 
+**Shell Aliases (Recommended):**
 ```bash
-# List plugins
-sudo docker exec wordpress_app wp plugin list --allow-root
+# These aliases are configured in ~/.bashrc
+wp plugin list              # Run WP-CLI as www-data
+wp-exec touch file.php      # Execute commands as www-data
+wp-bash                     # Interactive shell as www-data
+```
+
+**Direct Docker Commands:**
+```bash
+# List plugins (using alias)
+wp plugin list
 
 # Install plugin
-sudo docker exec wordpress_app wp plugin install [plugin-name] --activate --allow-root
+wp plugin install [plugin-name] --activate
 
 # Update all plugins
-sudo docker exec wordpress_app wp plugin update --all --allow-root
+wp plugin update --all
 
 # List themes
-sudo docker exec wordpress_app wp theme list --allow-root
+wp theme list
 
 # Database export
-sudo docker exec wordpress_app wp db export /var/www/html/backup.sql --allow-root
+wp db export /var/www/html/backup.sql
 
 # Clear cache
-sudo docker exec wordpress_app wp cache flush --allow-root
+wp cache flush
+
+# Create/edit files (use wp-exec for correct ownership)
+docker exec -u www-data -w /var/www/html wordpress_app touch newfile.php
+docker exec -u www-data -w /var/www/html wordpress_app mkdir -p custom-dir
 ```
+
+**Why use `-u www-data`?**
+- WordPress files are owned by `www-data:www-data` (UID 33)
+- Running as root creates files owned by `root:root` → causes permission errors
+- The `webdev` user is in the `docker` group, so **no sudo is needed**
 
 ### Database Access
 - **phpMyAdmin**: http://localhost:8081
-- **Direct MySQL**: `sudo docker exec -it wordpress_mysql mysql -u wordpress -p`
+- **Direct MySQL**: `docker exec -it wordpress_mysql mysql -u wordpress -p`
 - Database name: `wordpress`, user: `wordpress`, password: `wordpress`
 
 ## Installed Components

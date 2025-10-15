@@ -1079,3 +1079,380 @@
     window.wp.components,
     window.wp.i18n
 );
+
+// ========================================
+// FAQ SECTION BLOCK (Parent Container)
+// ========================================
+(function(blocks, element, blockEditor, components, i18n) {
+    var el = element.createElement;
+    var registerBlockType = blocks.registerBlockType;
+    var InspectorControls = blockEditor.InspectorControls;
+    var InnerBlocks = blockEditor.InnerBlocks;
+    var PanelBody = components.PanelBody;
+    var TextControl = components.TextControl;
+    var ToggleControl = components.ToggleControl;
+    var ColorPalette = components.ColorPalette;
+    var __ = i18n.__;
+
+    var emColors = [
+        { name: 'Slate Gray', color: '#454C57' },
+        { name: 'Steel Blue', color: '#627A94' },
+        { name: 'Accent Hover', color: '#C2CCD1' },
+        { name: 'White', color: '#FFFFFF' },
+        { name: 'Neutral BG', color: '#F2F7F9' },
+        { name: 'Border', color: '#E6EEF2' }
+    ];
+
+    registerBlockType('epic-marks/faq-section', {
+        title: __('FAQ Section', 'epic-marks'),
+        icon: 'editor-help',
+        category: 'widgets',
+        attributes: {
+            title: {
+                type: 'string',
+                default: 'Frequently Asked Questions'
+            },
+            bgColor: {
+                type: 'string',
+                default: '#F2F7F9'
+            },
+            textColor: {
+                type: 'string',
+                default: '#454C57'
+            },
+            accentColor: {
+                type: 'string',
+                default: '#627A94'
+            },
+            borderColor: {
+                type: 'string',
+                default: '#C2CCD1'
+            },
+            showControls: {
+                type: 'boolean',
+                default: true
+            },
+            openFirstCategory: {
+                type: 'boolean',
+                default: true
+            },
+            openFirstFaq: {
+                type: 'boolean',
+                default: false
+            },
+            enableSeo: {
+                type: 'boolean',
+                default: true
+            },
+            ariaLabel: {
+                type: 'string',
+                default: 'Service FAQ'
+            }
+        },
+
+        edit: function(props) {
+            var attributes = props.attributes;
+            var setAttributes = props.setAttributes;
+
+            return el(
+                'div',
+                {},
+                el(
+                    InspectorControls,
+                    {},
+                    el(
+                        PanelBody,
+                        { title: __('FAQ Settings', 'epic-marks'), initialOpen: true },
+                        el(TextControl, {
+                            label: __('Section Title', 'epic-marks'),
+                            value: attributes.title,
+                            onChange: function(value) { setAttributes({ title: value }); }
+                        }),
+                        el(TextControl, {
+                            label: __('Accessibility Label', 'epic-marks'),
+                            value: attributes.ariaLabel,
+                            onChange: function(value) { setAttributes({ ariaLabel: value }); }
+                        }),
+                        el(ToggleControl, {
+                            label: __('Show Expand/Collapse Controls', 'epic-marks'),
+                            checked: attributes.showControls,
+                            onChange: function(value) { setAttributes({ showControls: value }); }
+                        }),
+                        el(ToggleControl, {
+                            label: __('Open First Category by Default', 'epic-marks'),
+                            checked: attributes.openFirstCategory,
+                            onChange: function(value) { setAttributes({ openFirstCategory: value }); }
+                        }),
+                        el(ToggleControl, {
+                            label: __('Open First FAQ by Default', 'epic-marks'),
+                            checked: attributes.openFirstFaq,
+                            onChange: function(value) { setAttributes({ openFirstFaq: value }); }
+                        }),
+                        el(ToggleControl, {
+                            label: __('Enable SEO Schema (JSON-LD)', 'epic-marks'),
+                            checked: attributes.enableSeo,
+                            onChange: function(value) { setAttributes({ enableSeo: value }); }
+                        })
+                    ),
+                    el(
+                        PanelBody,
+                        { title: __('Colors', 'epic-marks'), initialOpen: false },
+                        el('p', { style: { marginBottom: '8px', fontWeight: '600' } }, __('Background Color', 'epic-marks')),
+                        el(ColorPalette, {
+                            colors: emColors,
+                            value: attributes.bgColor,
+                            onChange: function(value) { setAttributes({ bgColor: value }); }
+                        }),
+                        el('p', { style: { marginTop: '16px', marginBottom: '8px', fontWeight: '600' } }, __('Text Color', 'epic-marks')),
+                        el(ColorPalette, {
+                            colors: emColors,
+                            value: attributes.textColor,
+                            onChange: function(value) { setAttributes({ textColor: value }); }
+                        }),
+                        el('p', { style: { marginTop: '16px', marginBottom: '8px', fontWeight: '600' } }, __('Accent Color (Icons/Active)', 'epic-marks')),
+                        el(ColorPalette, {
+                            colors: emColors,
+                            value: attributes.accentColor,
+                            onChange: function(value) { setAttributes({ accentColor: value }); }
+                        }),
+                        el('p', { style: { marginTop: '16px', marginBottom: '8px', fontWeight: '600' } }, __('Border Color', 'epic-marks')),
+                        el(ColorPalette, {
+                            colors: emColors,
+                            value: attributes.borderColor,
+                            onChange: function(value) { setAttributes({ borderColor: value }); }
+                        })
+                    )
+                ),
+                el(
+                    'div',
+                    {
+                        className: 'em-faq-section-editor',
+                        style: {
+                            background: attributes.bgColor,
+                            color: attributes.textColor,
+                            padding: '20px',
+                            border: '2px dashed ' + attributes.borderColor,
+                            borderRadius: '8px'
+                        }
+                    },
+                    el('h3', { style: { margin: '0 0 16px 0', textAlign: 'center' } }, attributes.title),
+                    el('div', { style: { fontSize: '12px', marginBottom: '16px', textAlign: 'center', opacity: 0.7 } },
+                        '💡 Add FAQ Category blocks below, then add FAQ Item blocks inside each category'
+                    ),
+                    el(InnerBlocks, {
+                        allowedBlocks: ['epic-marks/faq-category'],
+                        template: [
+                            ['epic-marks/faq-category', { categoryTitle: 'General' }, [
+                                ['epic-marks/faq-item', { question: 'What file types do you accept?', answer: '<p>PNG (300 DPI, transparent) is recommended. JPG and PDF are also accepted.</p>' }]
+                            ]]
+                        ]
+                    })
+                )
+            );
+        },
+
+        save: function() {
+            return el(InnerBlocks.Content);
+        }
+    });
+
+})(
+    window.wp.blocks,
+    window.wp.element,
+    window.wp.blockEditor,
+    window.wp.components,
+    window.wp.i18n
+);
+
+// ========================================
+// FAQ CATEGORY BLOCK (Inner Block)
+// ========================================
+(function(blocks, element, blockEditor, components, i18n) {
+    var el = element.createElement;
+    var registerBlockType = blocks.registerBlockType;
+    var InspectorControls = blockEditor.InspectorControls;
+    var InnerBlocks = blockEditor.InnerBlocks;
+    var PanelBody = components.PanelBody;
+    var TextControl = components.TextControl;
+    var __ = i18n.__;
+
+    registerBlockType('epic-marks/faq-category', {
+        title: __('FAQ Category', 'epic-marks'),
+        icon: 'category',
+        category: 'widgets',
+        parent: ['epic-marks/faq-section'],
+        attributes: {
+            categoryTitle: {
+                type: 'string',
+                default: 'Category'
+            }
+        },
+
+        edit: function(props) {
+            var attributes = props.attributes;
+            var setAttributes = props.setAttributes;
+
+            return el(
+                'div',
+                {},
+                el(
+                    InspectorControls,
+                    {},
+                    el(
+                        PanelBody,
+                        { title: __('Category Settings', 'epic-marks'), initialOpen: true },
+                        el(TextControl, {
+                            label: __('Category Title', 'epic-marks'),
+                            value: attributes.categoryTitle,
+                            onChange: function(value) { setAttributes({ categoryTitle: value }); }
+                        })
+                    )
+                ),
+                el(
+                    'div',
+                    {
+                        className: 'em-faq-category-editor',
+                        style: {
+                            border: '1px solid #627A94',
+                            borderRadius: '8px',
+                            padding: '16px',
+                            marginBottom: '16px',
+                            background: '#fff'
+                        }
+                    },
+                    el('h4', {
+                        style: {
+                            margin: '0 0 12px 0',
+                            color: '#627A94',
+                            fontSize: '16px',
+                            fontWeight: '700',
+                            textTransform: 'uppercase'
+                        }
+                    }, '📁 ' + attributes.categoryTitle),
+                    el('div', { style: { fontSize: '12px', marginBottom: '12px', color: '#666' } },
+                        'Add FAQ Item blocks below'
+                    ),
+                    el(InnerBlocks, {
+                        allowedBlocks: ['epic-marks/faq-item'],
+                        template: [
+                            ['epic-marks/faq-item', {}]
+                        ]
+                    })
+                )
+            );
+        },
+
+        save: function() {
+            return el(InnerBlocks.Content);
+        }
+    });
+
+})(
+    window.wp.blocks,
+    window.wp.element,
+    window.wp.blockEditor,
+    window.wp.components,
+    window.wp.i18n
+);
+
+// ========================================
+// FAQ ITEM BLOCK (Inner Block)
+// ========================================
+(function(blocks, element, blockEditor, components, i18n) {
+    var el = element.createElement;
+    var registerBlockType = blocks.registerBlockType;
+    var InspectorControls = blockEditor.InspectorControls;
+    var RichText = blockEditor.RichText;
+    var PanelBody = components.PanelBody;
+    var TextControl = components.TextControl;
+    var TextareaControl = components.TextareaControl;
+    var __ = i18n.__;
+
+    registerBlockType('epic-marks/faq-item', {
+        title: __('FAQ Item', 'epic-marks'),
+        icon: 'editor-help',
+        category: 'widgets',
+        parent: ['epic-marks/faq-category'],
+        attributes: {
+            question: {
+                type: 'string',
+                default: 'What file types do you accept?'
+            },
+            answer: {
+                type: 'string',
+                default: '<p>PNG (300 DPI, transparent where needed) is recommended. JPG and PDF are also accepted.</p>'
+            }
+        },
+
+        edit: function(props) {
+            var attributes = props.attributes;
+            var setAttributes = props.setAttributes;
+
+            return el(
+                'div',
+                {},
+                el(
+                    InspectorControls,
+                    {},
+                    el(
+                        PanelBody,
+                        { title: __('FAQ Item Settings', 'epic-marks'), initialOpen: true },
+                        el(TextControl, {
+                            label: __('Question', 'epic-marks'),
+                            value: attributes.question,
+                            onChange: function(value) { setAttributes({ question: value }); }
+                        }),
+                        el(TextareaControl, {
+                            label: __('Answer (HTML supported)', 'epic-marks'),
+                            value: attributes.answer,
+                            onChange: function(value) { setAttributes({ answer: value }); },
+                            rows: 5,
+                            help: __('You can use HTML tags like <p>, <strong>, <a>, <ul>, <li>, etc.', 'epic-marks')
+                        })
+                    )
+                ),
+                el(
+                    'div',
+                    {
+                        className: 'em-faq-item-editor',
+                        style: {
+                            border: '1px solid #E6EEF2',
+                            borderRadius: '8px',
+                            padding: '12px',
+                            marginBottom: '8px',
+                            background: '#fff'
+                        }
+                    },
+                    el('div', {
+                        style: {
+                            fontWeight: '700',
+                            marginBottom: '8px',
+                            color: '#454C57',
+                            fontSize: '14px'
+                        }
+                    }, '❓ ' + attributes.question),
+                    el('div', {
+                        style: {
+                            fontSize: '13px',
+                            color: '#666',
+                            lineHeight: '1.4'
+                        },
+                        dangerouslySetInnerHTML: { __html: attributes.answer }
+                    })
+                )
+            );
+        },
+
+        save: function() {
+            // Dynamic block, rendered server-side
+            return null;
+        }
+    });
+
+})(
+    window.wp.blocks,
+    window.wp.element,
+    window.wp.blockEditor,
+    window.wp.components,
+    window.wp.i18n
+);

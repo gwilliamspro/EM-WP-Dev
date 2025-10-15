@@ -1,0 +1,525 @@
+# Epic Marks Custom Blocks
+
+Custom Gutenberg blocks for the Epic Marks WordPress site, built to match the brand's design system and provide specialized e-commerce functionality.
+
+## Overview
+
+This plugin provides three custom Gutenberg blocks designed specifically for Epic Marks:
+- **Wave Block**: Animated SVG wave dividers with customizable styling
+- **Countdown Block**: Full-width urgency banner for same-day shipping deadlines
+- **USP Block**: Unique Selling Point feature blocks with icon/emoji support
+
+All blocks are server-side rendered for optimal performance and include comprehensive styling controls via the WordPress block editor.
+
+## Architecture
+
+### Plugin Structure
+```
+epic-marks-blocks/
+├── epic-marks-blocks.php    # Main plugin file (v1.0.6)
+├── assets/
+│   ├── blocks.js            # Block registration and editor UI (642 lines)
+│   └── blocks.css           # Frontend and editor styles (87 lines)
+└── README.md                # This documentation
+```
+
+### Technical Implementation
+- **Block Registration**: PHP-based with `register_block_type()` and server-side rendering
+- **Editor Interface**: React-based using WordPress Gutenberg components
+- **Styling System**: Inline styles for dynamic attributes, CSS classes for static styles
+- **Color Picker**: Integrated with WordPress theme color palette
+- **Version**: 1.0.6
+
+## Block Reference
+
+### 1. Wave Block (`epic-marks/wave-block`)
+
+Animated SVG wave dividers for visual section transitions. Commonly used between hero sections and content areas.
+
+**Attributes:**
+- `waveHeight`: Desktop wave height in pixels (default: 80)
+- `waveHeightMobile`: Mobile wave height in pixels (default: 60)
+- `waveColor`: Wave fill color (default: #627a94 - Steel Blue)
+- `backgroundColor`: Container background color (default: transparent)
+- `bottomSectionHeight`: Solid section below waves in pixels (default: 100)
+- `animate`: Enable wave animation (default: true)
+- `rotate`: Rotate waves 180° for upward effect (default: false)
+
+**Usage Example:**
+```html
+<!-- Waves transitioning from white to Steel Blue -->
+waveColor: #627a94
+backgroundColor: #FFFFFF
+waveHeight: 120
+bottomSectionHeight: 80
+animate: true
+rotate: false
+```
+
+**Technical Notes:**
+- Full viewport width using CSS `100vw` technique
+- 4 layered SVG waves with opacity variations (0.1, 0.2, 0.3, 0.4)
+- Smooth cubic-bezier animations at different speeds (4s, 6s, 8s, 10s)
+- Unique keyframe IDs prevent animation conflicts when multiple instances exist
+- Responsive with separate mobile/desktop heights
+
+**Common Use Cases:**
+- Homepage hero to content transition
+- Section dividers with color changes
+- Footer visual separation
+- Product category headers
+
+---
+
+### 2. Countdown Block (`epic-marks/countdown-block`)
+
+Full-width urgency banner for same-day shipping deadlines and promotional messages.
+
+**Attributes:**
+- `countdownText`: Banner message text (default: "Order in 2h 30m to ship today (by 2:00 PM CT).")
+- `backgroundColor`: Banner background color (default: #627a94 - Steel Blue)
+- `textColor`: Text color (default: #ffffff - White)
+- `textSize`: Font size in pixels (default: 18)
+- `paddingTop`: Top padding in pixels (default: 12)
+- `paddingBottom`: Bottom padding in pixels (default: 12)
+
+**Usage Example:**
+```html
+<!-- Epic Marks same-day shipping banner -->
+countdownText: "Order by 2:00 PM CT for same-day shipping!"
+backgroundColor: #627a94
+textColor: #ffffff
+textSize: 18
+paddingTop: 12
+paddingBottom: 12
+```
+
+**Technical Notes:**
+- Full viewport width using breakout technique
+- Bold 700 weight with Inter font family
+- Text center-aligned for optimal readability
+- Unique ID per instance for JavaScript targeting (future countdown feature)
+- 1rem horizontal padding for mobile safety
+
+**Integration Points:**
+- **Future Enhancement**: Dynamic countdown timer via JavaScript
+- **WooCommerce**: Can integrate with order cutoff times from WooCommerce settings
+- **Admin Control**: Text fully editable via block inspector
+
+**Common Use Cases:**
+- Same-day shipping deadlines
+- Flash sale countdowns
+- Holiday cutoff notifications
+- Promotional announcements
+
+---
+
+### 3. USP Block (`epic-marks/usp-block`)
+
+Individual Unique Selling Point feature blocks with icon/emoji support and advanced styling controls.
+
+**Attributes:**
+- `icon`: Emoji or icon character (e.g., "🚀", "✓", "📦")
+- `title`: Feature title text (default: "Feature Title")
+- `iconSize`: Icon font size in pixels (default: 32)
+- `titleSize`: Title font size in pixels (default: 16)
+- `textColor`: Text and icon color (default: #454C57 - Slate Gray)
+- `backgroundColor`: Block background color (default: transparent)
+- `padding`: Internal padding in pixels (default: 16)
+- `borderRadius`: Corner radius in pixels (default: 0)
+- `boxShadow`: Drop shadow toggle (default: false)
+
+**Advanced Features:**
+- **Copy/Paste Styles**: Toolbar buttons to copy block styles and paste to other USP blocks
+- **Theme Color Palette**: Color picker integrated with WordPress theme colors
+- **Auto-centering**: Horizontal layout with 180px fixed width for consistent text wrapping
+- **Vertical Spacing**: Dynamic spacing for text-only blocks (no icon)
+
+**Usage Example:**
+```html
+<!-- White card with shadow for product features -->
+icon: "⚡"
+title: "SAME-DAY PRINTING"
+iconSize: 36
+titleSize: 14
+textColor: #454C57
+backgroundColor: #FFFFFF
+padding: 24
+borderRadius: 8
+boxShadow: true
+```
+
+**Copy/Paste Styles Workflow:**
+1. Design one USP block with desired styles
+2. Click **Copy Styles** button in toolbar
+3. Select another USP block
+4. Click **Paste Styles** button
+5. All styling attributes transfer instantly (icon and title text remain unique)
+
+**Technical Notes:**
+- Inline-block layout for horizontal auto-centering
+- CSS `:has()` selectors for conditional spacing
+- Server-side rendering for performance
+- Style clipboard stored in JavaScript memory (per-session)
+- WordPress notices API for user feedback
+
+**Common Use Cases:**
+- Homepage feature grids (3-4 columns)
+- Product page benefits
+- Service highlights
+- Trust indicators
+
+**Typical USP Grid:**
+```
+[Row with 3 USP Blocks]
+📦 SAME-DAY SHIPPING    |    ✓ PRO QUALITY    |    🎨 CUSTOM DESIGN
+```
+
+---
+
+## Installation & Activation
+
+### Manual Installation
+1. Upload `epic-marks-blocks/` directory to `/wp-content/plugins/`
+2. Navigate to **Plugins → Installed Plugins** in WordPress admin
+3. Click **Activate** on "Epic Marks Custom Blocks"
+
+### Verification
+```bash
+# Check if plugin is active
+sudo docker exec wordpress_app wp plugin list --allow-root | grep epic-marks
+
+# Expected output:
+# epic-marks-blocks    1.0.6    active    Epic Marks Custom Blocks
+```
+
+### Deactivation
+```bash
+# Via WP-CLI
+sudo docker exec wordpress_app wp plugin deactivate epic-marks-blocks --allow-root
+
+# Via WordPress admin
+# Plugins → Installed Plugins → Deactivate
+```
+
+---
+
+## Using the Blocks in Editor
+
+### Adding Blocks
+1. Open page/post in Block Editor
+2. Click **+** (Add Block) button
+3. Search for:
+   - "Wave Block"
+   - "Countdown Block"
+   - "USP Block"
+4. Click to insert
+
+### Block Categories
+All blocks appear in the **Widgets** category in the block inserter.
+
+### Editing Blocks
+- **Inspector Panel** (right sidebar): All styling and content options
+- **Toolbar** (top of block): Copy/paste styles (USP Block only)
+- **Direct Editing**: Type directly into title fields
+
+---
+
+## Styling Customization
+
+### Epic Marks Brand Colors (Pre-configured)
+
+All blocks integrate with the Epic Marks color palette defined in the Kadence child theme:
+
+```css
+--slate-gray: #454C57;      /* Primary text */
+--steel-blue: #627A94;      /* Accent */
+--accent-hover: #C2CCD1;    /* Hover states */
+--white: #FFFFFF;           /* Backgrounds */
+--neutral-bg: #F2F7F9;      /* Subtle backgrounds */
+--border: #E6EEF2;          /* Borders */
+--success: #64BF99;         /* Success states */
+--error: #DA3F3F;           /* Error states */
+```
+
+These colors appear in the WordPress color picker for easy selection.
+
+### CSS Classes
+
+**Wave Block:**
+- `.em-wave-full-container`: Outer wrapper
+- `.em-wave-container`: Wave SVG container
+- `.em-waves-animated`: Animation enabled class
+- `.em-waves-rotated`: 180° rotation class
+- `.em-wave-bottom-section`: Solid section below waves
+
+**Countdown Block:**
+- `.em-countdown-banner`: Full-width banner wrapper
+
+**USP Block:**
+- `.em-usp-item`: Block wrapper
+- `.em-usp-icon`: Icon/emoji container
+- `.em-usp-title`: Title text
+
+### Custom CSS Overrides
+
+Add to Kadence child theme `style.css` or **Customizer → Additional CSS**:
+
+```css
+/* Increase wave animation speed */
+.em-waves-animated .wave-parallax-1 > use {
+    animation-duration: 5s !important;
+}
+
+/* Custom countdown hover effect */
+.em-countdown-banner:hover {
+    opacity: 0.9;
+    transition: opacity 0.3s ease;
+}
+
+/* USP grid layout (3 columns) */
+.wp-block-group.usp-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2rem;
+}
+
+@media (max-width: 768px) {
+    .wp-block-group.usp-grid {
+        grid-template-columns: 1fr;
+    }
+}
+```
+
+---
+
+## Common Design Patterns
+
+### Homepage Hero with Wave Transition
+```
+[Hero Section - White background]
+[Wave Block - waveColor: #627A94, backgroundColor: #FFFFFF]
+[Content Section - #627A94 background]
+```
+
+### Same-Day Shipping Header
+```
+[Countdown Block - "Order by 2PM for same-day shipping!"]
+[Page Content]
+```
+
+### 3-Column USP Grid
+```
+[Group Block - 3 columns]
+    [USP Block - "📦 SAME-DAY SHIPPING"]
+    [USP Block - "✓ PRO QUALITY"]
+    [USP Block - "🎨 CUSTOM DESIGN"]
+```
+
+### Feature Section with Cards
+```
+[Wave Block - Inverted]
+[Group Block - White background, 4 columns]
+    [USP Block - White card with shadow]
+    [USP Block - White card with shadow]
+    [USP Block - White card with shadow]
+    [USP Block - White card with shadow]
+[Wave Block - Regular]
+```
+
+---
+
+## Development
+
+### File Structure
+- **epic-marks-blocks.php**: Plugin loader, block registration, PHP render callbacks
+- **assets/blocks.js**: React components, block definitions, editor UI
+- **assets/blocks.css**: Frontend styling, editor preview styles
+
+### Adding New Blocks
+1. Register block in `epic-marks-blocks.php`:
+   ```php
+   register_block_type('epic-marks/new-block', array(
+       'editor_script' => 'epic-marks-blocks',
+       'style' => 'epic-marks-blocks-style',
+       'render_callback' => array($this, 'render_new_block')
+   ));
+   ```
+
+2. Add block definition in `assets/blocks.js`:
+   ```javascript
+   registerBlockType('epic-marks/new-block', {
+       title: 'New Block',
+       icon: 'star-filled',
+       category: 'widgets',
+       attributes: { /* ... */ },
+       edit: function(props) { /* ... */ },
+       save: function() { return null; } // Server-side render
+   });
+   ```
+
+3. Create render callback in `epic-marks-blocks.php`:
+   ```php
+   public function render_new_block($attributes) {
+       ob_start();
+       ?>
+       <div class="em-new-block">
+           <?php echo esc_html($attributes['content']); ?>
+       </div>
+       <?php
+       return ob_get_clean();
+   }
+   ```
+
+### Testing Changes
+```bash
+# Clear WordPress cache
+sudo docker exec wordpress_app wp cache flush --allow-root
+
+# Check for JavaScript errors in browser console
+# Refresh page editor and test block
+
+# View frontend rendering
+# Publish page and view on frontend
+```
+
+### Version Bumping
+Update version in plugin header (line 5 of `epic-marks-blocks.php`):
+```php
+* Version: 1.0.7
+```
+
+---
+
+## Troubleshooting
+
+**Issue: Blocks not appearing in editor**
+- **Solution:** Clear browser cache, hard refresh (Ctrl+Shift+R)
+- **Solution:** Check plugin is activated: `wp plugin list --allow-root`
+- **Solution:** Check browser console for JavaScript errors
+
+**Issue: Wave animations not working**
+- **Solution:** Ensure `animate` attribute is `true`
+- **Solution:** Check CSS animations not disabled by theme
+- **Solution:** Test in different browser (animations use CSS3)
+
+**Issue: Countdown block not full-width**
+- **Solution:** Ensure block is not nested in narrow container
+- **Solution:** Check parent block doesn't have `max-width` restriction
+- **Solution:** Use "Full Width" alignment if available
+
+**Issue: USP block icons showing as squares**
+- **Solution:** Emoji rendering depends on OS/browser fonts
+- **Solution:** Test with different emojis (some render better)
+- **Solution:** Use Font Awesome classes instead of emojis (requires icon font)
+
+**Issue: Copy/paste styles not working**
+- **Solution:** Both source and target must be USP blocks
+- **Solution:** Styles stored in session memory (lost on page refresh)
+- **Solution:** Copy styles before navigating away from page
+
+**Issue: Colors not matching design**
+- **Solution:** Use hex codes from Epic Marks brand palette (see Styling section)
+- **Solution:** Check Kadence theme Global Palette settings
+- **Solution:** Test on frontend (editor may show slightly different colors)
+
+---
+
+## Performance Notes
+
+- **Server-Side Rendering**: All blocks use PHP rendering for zero client-side JavaScript
+- **Inline Styles**: Dynamic attributes generate inline styles for maximum flexibility
+- **Animation Performance**: Wave animations use CSS transforms (GPU-accelerated)
+- **Caching Compatibility**: Blocks are cache-friendly (no dynamic server-side data)
+- **File Size**: Total plugin size ~25KB (minimal footprint)
+
+---
+
+## Browser Compatibility
+
+**Fully Supported:**
+- Chrome 90+ (desktop/mobile)
+- Firefox 88+ (desktop/mobile)
+- Safari 14+ (desktop/mobile)
+- Edge 90+ (desktop)
+
+**Partial Support:**
+- IE 11: Wave animations may not work (CSS transform limitations)
+- Older Android browsers: Emoji rendering varies by device
+
+**Recommended Testing Browsers:**
+- Chrome (primary development browser)
+- Safari (iOS compatibility)
+- Firefox (standards compliance check)
+
+---
+
+## Future Enhancements
+
+**Planned Features:**
+- [ ] Dynamic countdown timer with JavaScript (real-time updates)
+- [ ] Wave block presets (common color combinations)
+- [ ] USP block icon library (pre-curated emoji/icon sets)
+- [ ] Animation timing controls (custom easing curves)
+- [ ] Global style presets (save/load common designs)
+- [ ] WooCommerce integration (dynamic shipping deadline from store settings)
+
+**Under Consideration:**
+- [ ] Video background wave option
+- [ ] Gradient support for wave colors
+- [ ] USP block description field (subtitle text)
+- [ ] Mobile-specific animation toggle
+
+---
+
+## Version History
+
+**v1.0.6** (2025-10-12)
+- Add copy/paste styles functionality for USP blocks
+- Replace basic color picker with WordPress theme palette
+- Add comprehensive styling options (background, padding, radius, shadow)
+- Implement dynamic vertical spacing for text-only USP blocks
+- Add horizontal layout CSS with auto-centering
+- Update Kadence child theme styles for white backgrounds
+
+**v1.0.5** (2025-10-12)
+- Initial release with Wave, Countdown, and USP blocks
+- Server-side rendering implementation
+- Basic styling controls
+
+---
+
+## Support & Documentation
+
+**Code Location:** `/wordpress/wp-content/plugins/epic-marks-blocks/`
+
+**Related Documentation:**
+- Main project docs: `/CLAUDE.md`
+- Header/Footer guide: `/HEADER-FOOTER-GUIDE.md`
+- Kadence child theme: `/wordpress/wp-content/themes/kadence-child/`
+
+**WP-CLI Commands:**
+```bash
+# Check plugin status
+sudo docker exec wordpress_app wp plugin status epic-marks-blocks --allow-root
+
+# View plugin info
+sudo docker exec wordpress_app wp plugin get epic-marks-blocks --allow-root
+```
+
+**Debugging:**
+Enable WordPress debug mode in `wp-config.php`:
+```php
+define('WP_DEBUG', true);
+define('WP_DEBUG_LOG', true);
+define('WP_DEBUG_DISPLAY', false);
+```
+
+Check logs: `/wordpress/wp-content/debug.log`
+
+---
+
+**Last Updated:** 2025-10-12
+**Plugin Version:** 1.0.6
+**WordPress Version:** 6.4+
+**Minimum PHP:** 7.4
