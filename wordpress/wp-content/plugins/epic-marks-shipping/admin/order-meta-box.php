@@ -59,6 +59,9 @@ function em_render_pirateship_meta_box( $post_or_order ) {
     $shipping_methods = $order->get_shipping_methods();
     $shipping_method = '';
     $service_code = '';
+    $profile_id = '';
+    $location = '';
+    $method_type = '';
     
     foreach ( $shipping_methods as $method ) {
         $shipping_method = $method->get_method_title();
@@ -66,11 +69,21 @@ function em_render_pirateship_meta_box( $post_or_order ) {
         foreach ( $meta_data as $meta ) {
             if ( $meta->key === 'service_code' ) {
                 $service_code = $meta->value;
-                break;
+            } elseif ( $meta->key === 'profile_id' ) {
+                $profile_id = $meta->value;
+            } elseif ( $meta->key === 'location' ) {
+                $location = $meta->value;
+            } elseif ( $meta->key === 'method_type' ) {
+                $method_type = $meta->value;
             }
         }
         break;
     }
+    
+    // Get additional package meta data
+    $partial_pickup = $order->get_meta( '_partial_pickup_enabled', true );
+    $ship_to_store = $order->get_meta( '_ship_to_store_selected', true );
+    $ship_to_store_cost = $order->get_meta( '_ship_to_store_cost', true );
     
     // Calculate total weight
     $total_weight = 0;
@@ -100,6 +113,55 @@ function em_render_pirateship_meta_box( $post_or_order ) {
     
     ?>
     <div class="em-pirateship-info">
+        
+        <?php
+        // Display package details if available
+        if ( $profile_id || $location || $partial_pickup || $ship_to_store ) :
+        ?>
+            <div class="em-package-details" style="background:#f0f8ff;padding:10px;margin-bottom:15px;border:1px solid #b3d9ff;border-radius:3px;">
+                <p style="margin:0 0 8px 0;"><strong><?php esc_html_e( 'Package Details:', 'epic-marks-shipping' ); ?></strong></p>
+                
+                <?php if ( $profile_id ) : ?>
+                    <?php
+                    $profile = EM_Shipping_Profile::get( $profile_id );
+                    $profile_name = $profile ? $profile->name : ucfirst( str_replace( '-', ' ', $profile_id ) );
+                    ?>
+                    <p style="margin:0 0 5px 0;font-size:12px;">
+                        <strong><?php esc_html_e( 'Profile:', 'epic-marks-shipping' ); ?></strong>
+                        <?php echo esc_html( $profile_name ); ?>
+                    </p>
+                <?php endif; ?>
+                
+                <?php if ( $location ) : ?>
+                    <p style="margin:0 0 5px 0;font-size:12px;">
+                        <strong><?php esc_html_e( 'Fulfillment:', 'epic-marks-shipping' ); ?></strong>
+                        <?php echo esc_html( ucfirst( $location ) ); ?>
+                    </p>
+                <?php endif; ?>
+                
+                <?php if ( $method_type === 'local_pickup' ) : ?>
+                    <p style="margin:0 0 5px 0;font-size:12px;color:#2c7a2c;">
+                        <strong><?php esc_html_e( '✓ Local Pickup', 'epic-marks-shipping' ); ?></strong>
+                    </p>
+                <?php endif; ?>
+                
+                <?php if ( $ship_to_store ) : ?>
+                    <p style="margin:0 0 5px 0;font-size:12px;color:#0071a1;">
+                        <strong><?php esc_html_e( 'Ship to Store', 'epic-marks-shipping' ); ?></strong>
+                        <?php if ( $ship_to_store_cost ) : ?>
+                            - $<?php echo esc_html( number_format( floatval( $ship_to_store_cost ), 2 ) ); ?>
+                        <?php endif; ?>
+                    </p>
+                <?php endif; ?>
+                
+                <?php if ( $partial_pickup ) : ?>
+                    <p style="margin:0;font-size:12px;color:#666;">
+                        <em><?php esc_html_e( 'Part of multi-package order', 'epic-marks-shipping' ); ?></em>
+                    </p>
+                <?php endif; ?>
+            </div>
+        <?php endif; ?>
+        
         <p><strong><?php esc_html_e( 'Shipping Details:', 'epic-marks-shipping' ); ?></strong></p>
         <p>
             <?php echo esc_html( $shipping_name ); ?><br>
@@ -118,15 +180,24 @@ function em_render_pirateship_meta_box( $post_or_order ) {
             <?php echo esc_html( number_format( $total_weight, 2 ) ); ?> lbs
         </p>
         
-        <p>
-            <a href="<?php echo esc_url( $pirateship_url ); ?>" target="_blank" class="button button-primary" style="width:100%;text-align:center;">
-                <?php esc_html_e( 'Purchase Label on PirateShip', 'epic-marks-shipping' ); ?>
-            </a>
-        </p>
-        
-        <p class="description">
-            <?php esc_html_e( 'Click to open PirateShip with pre-filled shipping information. You may need to connect your PirateShip account first.', 'epic-marks-shipping' ); ?>
-        </p>
+        <?php
+        // Only show PirateShip button if not local pickup
+        if ( $method_type !== 'local_pickup' ) :
+        ?>
+            <p>
+                <a href="<?php echo esc_url( $pirateship_url ); ?>" target="_blank" class="button button-primary" style="width:100%;text-align:center;">
+                    <?php esc_html_e( 'Purchase Label on PirateShip', 'epic-marks-shipping' ); ?>
+                </a>
+            </p>
+            
+            <p class="description">
+                <?php esc_html_e( 'Click to open PirateShip with pre-filled shipping information. You may need to connect your PirateShip account first.', 'epic-marks-shipping' ); ?>
+            </p>
+        <?php else : ?>
+            <p class="description" style="color:#2c7a2c;">
+                <?php esc_html_e( 'This order is for local pickup. No shipping label needed.', 'epic-marks-shipping' ); ?>
+            </p>
+        <?php endif; ?>
     </div>
     <?php
 }

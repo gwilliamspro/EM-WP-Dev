@@ -15,47 +15,84 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 function em_product_shipping_tab_content() {
     global $post;
-    
-    // Get current product tags
-    $tags = wp_get_post_terms( $post->ID, 'product_tag', array( 'fields' => 'names' ) );
-    if ( is_wp_error( $tags ) ) {
-        $tags = array();
+
+    // Get assigned profile
+    $assigned_profile_id = get_post_meta( $post->ID, '_shipping_profile', true );
+
+    // Get all profiles
+    $all_profiles = EM_Shipping_Profile::get_all();
+    $profile_options = array( '' => __( '-- Auto (from tags) --', 'epic-marks-shipping' ) );
+
+    foreach ( $all_profiles as $profile_id => $profile_data ) {
+        $profile_options[ $profile_id ] = $profile_data['name'];
     }
-    
-    // Determine location based on tags
-    $settings = get_option( 'em_ups_settings', array() );
-    $has_warehouse_tag = in_array( 'SSAW-App', $tags, true );
-    $has_store_tag = in_array( 'available-in-store', $tags, true );
-    
-    if ( $has_warehouse_tag && $has_store_tag ) {
-        $overlap_pref = $settings['overlap_preference'] ?? 'warehouse';
-        $location = $overlap_pref;
-        $location_note = sprintf(
-            __( 'Ships from: %s (both tags present, using preference setting)', 'epic-marks-shipping' ),
-            ucfirst( $overlap_pref )
-        );
-    } elseif ( $has_warehouse_tag ) {
-        $location = 'warehouse';
-        $location_note = __( 'Ships from: Warehouse (SSAW-App tag)', 'epic-marks-shipping' );
-    } elseif ( $has_store_tag ) {
-        $location = 'store';
-        $location_note = __( 'Ships from: Store (available-in-store tag)', 'epic-marks-shipping' );
-    } else {
-        $default_location = $settings['default_location'] ?? 'warehouse';
-        $location = $default_location;
-        $location_note = sprintf(
-            __( 'Ships from: %s (default - no location tags)', 'epic-marks-shipping' ),
-            ucfirst( $default_location )
-        );
-    }
-    
+
     echo '<div class="options_group">';
-    
+
+    // Profile selector
+    woocommerce_wp_select( array(
+        'id' => '_shipping_profile',
+        'label' => __( 'Shipping Profile', 'epic-marks-shipping' ),
+        'options' => $profile_options,
+        'value' => $assigned_profile_id,
+        'desc_tip' => true,
+        'description' => __( 'Select a shipping profile for this product. Leave as "Auto" to use tag-based routing.', 'epic-marks-shipping' ),
+    ) );
+
+    // Get effective profile (assigned or from tags)
+    if ( ! empty( $assigned_profile_id ) && isset( $all_profiles[ $assigned_profile_id ] ) ) {
+        $profile = $all_profiles[ $assigned_profile_id ];
+        $location_source = 'profile';
+        $locations = $profile['fulfillment_locations'];
+        $location_note = sprintf(
+            __( 'Fulfillment: %s (from profile: %s)', 'epic-marks-shipping' ),
+            implode( ', ', array_map( 'ucfirst', $locations ) ),
+            $profile['name']
+        );
+    } else {
+        // Fall back to tag-based detection
+        $tags = wp_get_post_terms( $post->ID, 'product_tag', array( 'fields' => 'names' ) );
+        if ( is_wp_error( $tags ) ) {
+            $tags = array();
+        }
+
+        $settings = get_option( 'em_ups_settings', array() );
+        $has_warehouse_tag = in_array( 'SSAW-App', $tags, true );
+        $has_store_tag = in_array( 'available-in-store', $tags, true );
+
+        if ( $has_warehouse_tag && $has_store_tag ) {
+            $overlap_pref = $settings['overlap_preference'] ?? 'warehouse';
+            $location = $overlap_pref;
+            $location_note = sprintf(
+                __( 'Ships from: %s (both tags present, using preference setting)', 'epic-marks-shipping' ),
+                ucfirst( $overlap_pref )
+            );
+        } elseif ( $has_warehouse_tag ) {
+            $location = 'warehouse';
+            $location_note = __( 'Ships from: Warehouse (SSAW-App tag)', 'epic-marks-shipping' );
+        } elseif ( $has_store_tag ) {
+            $location = 'store';
+            $location_note = __( 'Ships from: Store (available-in-store tag)', 'epic-marks-shipping' );
+        } else {
+            $default_location = $settings['default_location'] ?? 'warehouse';
+            $location = $default_location;
+            $location_note = sprintf(
+                __( 'Ships from: %s (default - no location tags)', 'epic-marks-shipping' ),
+                ucfirst( $default_location )
+            );
+        }
+
+        $location_source = 'tags';
+    }
+
     // Display location info
     echo '<p class="form-field"><strong>' . esc_html( $location_note ) . '</strong></p>';
-    echo '<p class="form-field description">' 
-        . esc_html__( 'Location is determined by product tags: "SSAW-App" for warehouse, "available-in-store" for store.', 'epic-marks-shipping' )
-        . '</p>';
+
+    if ( $location_source === 'tags' ) {
+        echo '<p class="form-field description">'
+            . esc_html__( 'Location is determined by product tags: "SSAW-App" for warehouse, "available-in-store" for store. Assign a profile above for more control.', 'epic-marks-shipping' )
+            . '</p>';
+    }
     
     // Markup enable checkbox
     woocommerce_wp_checkbox( array(
@@ -98,6 +135,16 @@ add_action( 'woocommerce_product_options_shipping', 'em_product_shipping_tab_con
  * Save product shipping meta
  */
 function em_save_product_shipping_meta( $post_id ) {
+    // Save shipping profile
+    if ( isset( $_POST['_shipping_profile'] ) ) {
+        $profile_id = sanitize_text_field( $_POST['_shipping_profile'] );
+        if ( ! empty( $profile_id ) ) {
+            update_post_meta( $post_id, '_shipping_profile', $profile_id );
+        } else {
+            delete_post_meta( $post_id, '_shipping_profile' );
+        }
+    }
+
     // Enable markup checkbox
     $enable_markup = isset( $_POST['_em_enable_shipping_markup'] ) ? 'yes' : 'no';
     update_post_meta( $post_id, '_em_enable_shipping_markup', $enable_markup );

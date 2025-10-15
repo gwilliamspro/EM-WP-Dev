@@ -1,0 +1,169 @@
+/**
+ * Checkout Package Styles
+ *
+ * Styles for shipping mode toggle and multi-package display
+ *
+ * @package EpicMarksShipping
+ * @since 2.0.0
+ */
+
+/* Shipping Mode Toggle Container */
+.em-shipping-mode-toggle {
+    background: #f7f7f7;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 20px;
+    margin-bottom: 25px;
+}
+
+.em-shipping-mode-toggle h3 {
+    margin: 0 0 10px 0;
+    font-size: 18px;
+    color: #333;
+}
+
+.em-shipping-notice {
+    margin: 0 0 15px 0;
+    color: #666;
+    font-size: 14px;
+}
+
+/* Shipping Mode Options */
+.em-shipping-mode-options {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.em-shipping-mode-option {
+    display: flex;
+    align-items: flex-start;
+    padding: 15px;
+    background: #fff;
+    border: 2px solid #ddd;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.em-shipping-mode-option:hover {
+    border-color: #999;
+}
+
+.em-shipping-mode-option.selected {
+    border-color: #0071a1;
+    background: #f0f8ff;
+}
+
+.em-shipping-mode-option input[type="radio"] {
+    margin: 3px 12px 0 0;
+    flex-shrink: 0;
+}
+
+.em-mode-label {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.em-mode-label strong {
+    color: #333;
+    font-size: 15px;
+}
+
+.em-mode-description {
+    color: #666;
+    font-size: 13px;
+}
+
+/* Loading Indicator */
+.em-shipping-loading {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 15px;
+    padding: 10px;
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    color: #666;
+    font-size: 14px;
+}
+
+.em-shipping-loading .spinner {
+    float: none;
+    margin: 0;
+}
+
+/* Multi-Package Display */
+.woocommerce-shipping-methods {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.woocommerce-shipping-methods li {
+    margin: 0 0 8px 0;
+    padding: 10px;
+    background: #f9f9f9;
+    border: 1px solid #e5e5e5;
+    border-radius: 3px;
+}
+
+.woocommerce-shipping-methods li label {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    margin: 0;
+}
+
+.woocommerce-shipping-methods li input[type="radio"] {
+    margin: 0 10px 0 0;
+}
+
+/* Package Names (when multiple packages) */
+.woocommerce-shipping-destination .shipping-package-name {
+    font-weight: bold;
+    color: #0071a1;
+    margin-bottom: 10px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #ddd;
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+    .em-shipping-mode-toggle {
+        padding: 15px;
+    }
+
+    .em-shipping-mode-toggle h3 {
+        font-size: 16px;
+    }
+
+    .em-shipping-mode-option {
+        padding: 12px;
+    }
+
+    .em-mode-label strong {
+        font-size: 14px;
+    }
+
+    .em-mode-description {
+        font-size: 12px;
+    }
+}
+
+/* Error Messages */
+.em-shipping-error {
+    margin: 15px 0;
+}
+
+/* Ship to Store Label Styling */
+.woocommerce-shipping-methods li label[for*="ship_to_store"] {
+    color: #0071a1;
+}
+
+.woocommerce-shipping-methods li label[for*="local_pickup"] {
+    color: #2c7a2c;
+    font-weight: 600;
+}
