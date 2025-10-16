@@ -1,5 +1,20 @@
 # Epic Marks Shipping Plugin - Changelog
 
+## Version 2.3.1 - 2025-10-16
+
+### What Changed
+- Removed deprecated "Free Shipping Threshold" field from Setup tab (replaced by Rules system)
+- Removed "Default UPS Services" field from Setup tab (migration-only, duplicated in Locations)
+- Simplified Setup tab from 193 to 153 lines (21% reduction)
+
+### Why
+- Eliminates admin confusion between deprecated threshold and new Rules tab
+- Removes settings that appear functional but have no effect on new locations
+- Clearer separation: Setup = global UPS config, Locations = per-location services
+- Streamlines admin experience by removing 40 lines of obsolete UI
+
+---
+
 ## Version 2.3.0 - 2025-10-16
 
 ### What Changed

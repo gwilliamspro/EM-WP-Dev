@@ -42,7 +42,7 @@ admin/
 ├── rule-edit.php            Free shipping rule form (4.1KB) [v2.1.0]
 │
 ├── tabs/                    Admin tab content pages
-│   ├── setup-tab.php             UPS credentials, services (12KB, simplified v2.1.0)
+│   ├── setup-tab.php             UPS credentials, services (153 lines, cleaned up v2.3.1)
 │   ├── locations-tab.php         Location management UI (6.8KB) [v2.1.0]
 │   ├── profiles-tab.php          Profile management list view (6.0KB)
 │   ├── routing-tab.php           Tag-based automation rules (6.1KB)
@@ -138,7 +138,7 @@ admin-tabs.php (tab router)
 - Total PHP files: 38 (was 25 in v2.0.0)
 - Total JS/CSS files: 12 (was 6 in v2.0.0)
 - Total LOC (estimated): ~22,000 (was ~15,000 in v2.0.0)
-- Largest file: admin/tabs/setup-tab.php (12KB, simplified from 14KB)
+- Largest file: class-shipping-method.php (650+ LOC)
 - Most complex: class-shipping-method.php (650+ LOC, was 500+ in v2.0.0)
 
 ## Dependencies
@@ -149,6 +149,7 @@ admin-tabs.php (tab router)
 - jQuery (WordPress core, admin UI)
 
 ## Version History
+**v2.3.1 (2025-10-16):** Setup tab cleanup (removed deprecated fields)
 **v2.3.0 (2025-10-16):** Delivery estimation + transparent fees
 **v2.2.0 (2025-10-16):** Intelligent routing (ship together vs split)
 **v2.1.0 (2025-10-16):** Multi-location, SSAW warehouses, boxes, conditional rules

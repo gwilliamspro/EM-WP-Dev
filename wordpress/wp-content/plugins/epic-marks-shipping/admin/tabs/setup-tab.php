@@ -76,6 +76,18 @@ $locations = EM_Location_Manager::get_all_locations();
                 </label>
             </td>
         </tr>
+        <tr>
+            <th scope="row">
+                <label for="multi_origin_strategy"><?php esc_html_e( 'Multi-Origin Strategy', 'epic-marks-shipping' ); ?></label>
+            </th>
+            <td>
+                <select id="multi_origin_strategy" name="em_ups_settings[multi_origin_strategy]">
+                    <option value="highest" <?php selected( $settings['multi_origin_strategy'] ?? 'highest', 'highest' ); ?>><?php esc_html_e( 'Highest Rate', 'epic-marks-shipping' ); ?></option>
+                    <option value="sum" <?php selected( $settings['multi_origin_strategy'] ?? 'highest', 'sum' ); ?>><?php esc_html_e( 'Sum of Rates', 'epic-marks-shipping' ); ?></option>
+                </select>
+                <p class="description"><?php esc_html_e( 'How to combine rates when cart contains products from multiple locations', 'epic-marks-shipping' ); ?></p>
+            </td>
+        </tr>
     </table>
     
     <h2><?php esc_html_e( 'UPS API Credentials', 'epic-marks-shipping' ); ?></h2>
@@ -111,57 +123,6 @@ $locations = EM_Location_Manager::get_all_locations();
             </th>
             <td>
                 <input type="text" id="ups_account_number" name="em_ups_settings[ups_account_number]" value="<?php echo esc_attr( $settings['ups_account_number'] ?? '' ); ?>" class="regular-text">
-            </td>
-        </tr>
-    </table>
-    
-    <h2><?php esc_html_e( 'Services & Options', 'epic-marks-shipping' ); ?></h2>
-    <table class="form-table">
-        <tr>
-            <th scope="row">
-                <label><?php esc_html_e( 'Default UPS Services', 'epic-marks-shipping' ); ?></label>
-            </th>
-            <td>
-                <?php
-                $services = array(
-                    'ground' => 'Ground',
-                    '2day' => '2nd Day Air',
-                    'nextday' => 'Next Day Air'
-                );
-                $selected_services = $settings['services'] ?? array( 'ground', '2day', 'nextday' );
-                foreach ( $services as $code => $name ) :
-                ?>
-                    <label style="display:block;margin-bottom:5px;">
-                        <input type="checkbox" name="em_ups_settings[services][]" value="<?php echo esc_attr( $code ); ?>" <?php checked( in_array( $code, $selected_services, true ) ); ?>>
-                        <?php echo esc_html( $name ); ?>
-                    </label>
-                <?php endforeach; ?>
-                <p class="description"><?php esc_html_e( 'Default services for new locations. Individual locations can override this in the Locations tab.', 'epic-marks-shipping' ); ?></p>
-            </td>
-        </tr>
-        <tr>
-            <th scope="row">
-                <label for="free_shipping_threshold"><?php esc_html_e( 'Free Shipping Threshold', 'epic-marks-shipping' ); ?></label>
-            </th>
-            <td>
-                <input type="number" id="free_shipping_threshold" name="em_ups_settings[free_shipping_threshold]" value="<?php echo esc_attr( $settings['free_shipping_threshold'] ?? '' ); ?>" step="0.01" min="0" class="small-text">
-                <p class="description">
-                    <?php esc_html_e( 'Cart total required for free shipping (leave empty to disable)', 'epic-marks-shipping' ); ?>
-                    <br>
-                    <em><?php esc_html_e( 'Note: This will be replaced by conditional rules in a future update for more flexible free shipping logic.', 'epic-marks-shipping' ); ?></em>
-                </p>
-            </td>
-        </tr>
-        <tr>
-            <th scope="row">
-                <label for="multi_origin_strategy"><?php esc_html_e( 'Multi-Origin Strategy', 'epic-marks-shipping' ); ?></label>
-            </th>
-            <td>
-                <select id="multi_origin_strategy" name="em_ups_settings[multi_origin_strategy]">
-                    <option value="highest" <?php selected( $settings['multi_origin_strategy'] ?? 'highest', 'highest' ); ?>><?php esc_html_e( 'Highest Rate', 'epic-marks-shipping' ); ?></option>
-                    <option value="sum" <?php selected( $settings['multi_origin_strategy'] ?? 'highest', 'sum' ); ?>><?php esc_html_e( 'Sum of Rates', 'epic-marks-shipping' ); ?></option>
-                </select>
-                <p class="description"><?php esc_html_e( 'How to combine rates when cart contains products from multiple locations', 'epic-marks-shipping' ); ?></p>
             </td>
         </tr>
     </table>
