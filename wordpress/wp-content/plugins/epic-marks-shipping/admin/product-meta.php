@@ -127,6 +127,69 @@ function em_product_shipping_tab_content() {
         'description' => __( 'Enter percentage (e.g. 15 for 15%) or flat amount (e.g. 5.00 for $5)', 'epic-marks-shipping' ),
     ) );
     
+    // Box assignment fields
+    echo '<h4 style="margin-top: 20px;">' . esc_html__( 'Box & Package Configuration', 'epic-marks-shipping' ) . '</h4>';
+    
+    // Get all boxes
+    $boxes = EM_Box_Manager::get_boxes();
+    $box_options = array( '' => __( '-- Auto-select smallest box --', 'epic-marks-shipping' ) );
+    
+    foreach ( $boxes as $box ) {
+        if ( isset( $box['status'] ) && $box['status'] === 'active' ) {
+            $dim_weight = EM_Box_Manager::calculate_dim_weight( $box );
+            $box_options[ $box['id'] ] = sprintf(
+                '%s (%s × %s × %s in, %s lbs max, %s lbs dim)',
+                $box['name'],
+                $box['outer_dimensions']['length'],
+                $box['outer_dimensions']['width'],
+                $box['outer_dimensions']['height'],
+                $box['max_weight'],
+                number_format( $dim_weight, 2 )
+            );
+        }
+    }
+    
+    // Preferred box selector
+    woocommerce_wp_select( array(
+        'id' => '_preferred_box',
+        'label' => __( 'Preferred Box', 'epic-marks-shipping' ),
+        'options' => $box_options,
+        'desc_tip' => true,
+        'description' => __( 'Choose a specific box for this product, or leave as auto to let the system select the smallest box that fits.', 'epic-marks-shipping' ),
+    ) );
+    
+    // Ships separately checkbox
+    woocommerce_wp_checkbox( array(
+        'id' => '_ships_separately',
+        'label' => __( 'Ships Separately', 'epic-marks-shipping' ),
+        'description' => __( 'This item must ship in its own package and cannot be combined with other items', 'epic-marks-shipping' ),
+        'desc_tip' => true,
+    ) );
+    
+    // Requires tube checkbox
+    woocommerce_wp_checkbox( array(
+        'id' => '_requires_tube',
+        'label' => __( 'Requires Tube Packaging', 'epic-marks-shipping' ),
+        'description' => __( 'This item cannot be folded and must ship in a tube (e.g., DTF rolls, posters)', 'epic-marks-shipping' ),
+        'desc_tip' => true,
+    ) );
+    
+    // Fragile handling checkbox
+    woocommerce_wp_checkbox( array(
+        'id' => '_requires_fragile_handling',
+        'label' => __( 'Fragile Item', 'epic-marks-shipping' ),
+        'description' => __( 'Add fragile handling fee for this item', 'epic-marks-shipping' ),
+        'desc_tip' => true,
+    ) );
+    
+    // Signature required checkbox
+    woocommerce_wp_checkbox( array(
+        'id' => '_requires_signature',
+        'label' => __( 'Signature Required', 'epic-marks-shipping' ),
+        'description' => __( 'Require signature on delivery for this item', 'epic-marks-shipping' ),
+        'desc_tip' => true,
+    ) );
+    
     echo '</div>';
 }
 add_action( 'woocommerce_product_options_shipping', 'em_product_shipping_tab_content' );
@@ -160,6 +223,32 @@ function em_save_product_shipping_meta( $post_id ) {
         $markup_value = floatval( $_POST['_em_markup_value'] );
         update_post_meta( $post_id, '_em_markup_value', $markup_value );
     }
+    
+    // Box assignment fields
+    if ( isset( $_POST['_preferred_box'] ) ) {
+        $preferred_box = sanitize_text_field( $_POST['_preferred_box'] );
+        if ( ! empty( $preferred_box ) ) {
+            update_post_meta( $post_id, '_preferred_box', $preferred_box );
+        } else {
+            delete_post_meta( $post_id, '_preferred_box' );
+        }
+    }
+    
+    // Ships separately checkbox
+    $ships_separately = isset( $_POST['_ships_separately'] ) ? 'yes' : 'no';
+    update_post_meta( $post_id, '_ships_separately', $ships_separately );
+    
+    // Requires tube checkbox
+    $requires_tube = isset( $_POST['_requires_tube'] ) ? 'yes' : 'no';
+    update_post_meta( $post_id, '_requires_tube', $requires_tube );
+    
+    // Fragile handling checkbox
+    $requires_fragile = isset( $_POST['_requires_fragile_handling'] ) ? 'yes' : 'no';
+    update_post_meta( $post_id, '_requires_fragile_handling', $requires_fragile );
+    
+    // Signature required checkbox
+    $requires_signature = isset( $_POST['_requires_signature'] ) ? 'yes' : 'no';
+    update_post_meta( $post_id, '_requires_signature', $requires_signature );
     
     // Check if product weight is set
     $product = wc_get_product( $post_id );

@@ -40,6 +40,14 @@ class EM_Profile_Rate_Calculator {
      * @param array $products Products in this package
      * @return array Array of rates
      */
+    /**
+     * Calculate rates for a profile and package
+     *
+     * @param array $profile Profile configuration
+     * @param array $package WooCommerce package array
+     * @param array $products Products in this package
+     * @return array Array of rates
+     */
     public function calculate( $profile, $package, $products ) {
         // Get customer destination
         $destination = $package['destination'];
@@ -54,14 +62,20 @@ class EM_Profile_Rate_Calculator {
 
         $rates = array();
 
-        // For now, profile zones are not yet implemented (Phase 2A focused on profile CRUD)
-        // Use UPS rates as default, similar to current behavior
-        // When zones are fully implemented in future, this will check zone methods
-
         // Get primary fulfillment location
         $fulfillment_locations = $profile['fulfillment_locations'] ?? array( 'warehouse' );
         $primary_location = $fulfillment_locations[0] ?? 'warehouse';
 
+        // Check if this is an SSAW product (multi-warehouse selection)
+        $is_ssaw = $primary_location === 'ssaw_warehouse' || 
+                   ( isset( $profile['id'] ) && strpos( $profile['id'], 'ssaw' ) !== false );
+
+        if ( $is_ssaw ) {
+            // Use SSAW warehouse selector for multi-warehouse rate calculation
+            return $this->calculate_ssaw_rates( $package, $products );
+        }
+
+        // Standard location-based rate calculation
         // Get origin address for this location
         $origin_address = $this->get_origin_address( $primary_location );
 
@@ -100,6 +114,51 @@ class EM_Profile_Rate_Calculator {
 
         // Apply markup based on products
         $rates = $this->apply_markup( $rates, $products );
+
+        return $rates;
+    }
+
+    /**
+     * Calculate SSAW rates using multi-warehouse selection
+     *
+     * @param array $package WooCommerce package
+     * @param array $products Products in package
+     * @return array SSAW rates with 155% markup applied
+     */
+    private function calculate_ssaw_rates( $package, $products ) {
+        // Get SSAW warehouse selector result
+        $warehouse_selection = EM_SSAW_Warehouse_Selector::select_warehouse(
+            $package,
+            $package['destination'],
+            array() // Will auto-fetch SSAW warehouses
+        );
+
+        if ( is_wp_error( $warehouse_selection ) ) {
+            // Log error and return fallback
+            if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+                error_log( 'SSAW warehouse selection failed: ' . $warehouse_selection->get_error_message() );
+            }
+            return $this->get_fallback_rates();
+        }
+
+        // Warehouse selector returns: warehouse, base_cost, final_cost (with 155% markup), transit_days
+        // Convert to rate format (SSAW only ships via Ground)
+        $rates = array(
+            array(
+                'service' => __( 'UPS Ground', 'epic-marks-shipping' ),
+                'code' => '03',
+                'cost' => $warehouse_selection['final_cost'],
+                'ssaw_warehouse_id' => $warehouse_selection['warehouse']['id'],
+                'ssaw_warehouse_code' => $warehouse_selection['warehouse']['warehouse_code'] ?? '',
+                'transit_days' => $warehouse_selection['transit_days'] ?? 5,
+                'is_fallback' => $warehouse_selection['is_fallback'] ?? false,
+            )
+        );
+
+        // Store warehouse info in package for order meta (accessed later)
+        if ( isset( $package['contents'] ) ) {
+            WC()->session->set( 'em_last_ssaw_warehouse', $warehouse_selection['warehouse'] );
+        }
 
         return $rates;
     }

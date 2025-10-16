@@ -280,4 +280,201 @@ class EM_UPS_API {
             error_log( sprintf( '[Epic Marks Shipping - %s] %s', strtoupper( $level ), $message ) );
         }
     }
+
+    /**
+     * Static method to get a single rate for SSAW warehouse selection
+     *
+     * Used by EM_SSAW_Warehouse_Selector to calculate rates from multiple warehouses.
+     *
+     * @param array  $origin_address  Origin warehouse address array with keys: address_1, city, state, zip, country
+     * @param array  $dest_address    Destination customer address array
+     * @param array  $package         WooCommerce package array with contents
+     * @param string $service         UPS service code ('ground', '2day', 'nextday', etc.)
+     * @return array|WP_Error Rate data with 'cost' and 'transit_days', or WP_Error on failure
+     */
+    public static function get_rate( $origin_address, $dest_address, $package, $service = 'ground' ) {
+        // Map service names to UPS service codes
+        $service_codes = array(
+            'ground'  => '03',
+            '2day'    => '02',
+            'nextday' => '01',
+            '3day'    => '12',
+            'saver'   => '13',
+        );
+
+        $service_code = isset( $service_codes[ $service ] ) ? $service_codes[ $service ] : '03';
+
+        // Calculate package weight
+        $weight = self::calculate_package_weight( $package );
+
+        // Build cache key including origin (for multi-warehouse support)
+        $origin_zip = isset( $origin_address['zip'] ) ? $origin_address['zip'] : '';
+        $dest_zip   = isset( $dest_address['postcode'] ) ? $dest_address['postcode'] : '';
+        $cache_key  = sprintf(
+            'em_ups_rate_%s_%s_%s_%.2f',
+            sanitize_text_field( $origin_zip ),
+            sanitize_text_field( $dest_zip ),
+            $service_code,
+            $weight
+        );
+
+        // Check cache
+        $cached = get_transient( $cache_key );
+        if ( false !== $cached ) {
+            return $cached;
+        }
+
+        // Get UPS settings
+        $settings = get_option( 'em_ups_settings', array() );
+        $test_mode = isset( $settings['test_mode'] ) && 'yes' === $settings['test_mode'];
+
+        // Build request
+        $request_data = array(
+            'RateRequest' => array(
+                'Request' => array(
+                    'TransactionReference' => array(
+                        'CustomerContext' => 'Epic Marks SSAW Rate Request'
+                    )
+                ),
+                'Shipment' => array(
+                    'Shipper' => array(
+                        'Address' => array(
+                            'AddressLine' => array( $origin_address['address_1'] ?? '' ),
+                            'City' => $origin_address['city'] ?? '',
+                            'StateProvinceCode' => $origin_address['state'] ?? '',
+                            'PostalCode' => $origin_zip,
+                            'CountryCode' => $origin_address['country'] ?? 'US'
+                        )
+                    ),
+                    'ShipTo' => array(
+                        'Address' => array(
+                            'City' => $dest_address['city'] ?? '',
+                            'StateProvinceCode' => $dest_address['state'] ?? '',
+                            'PostalCode' => $dest_zip,
+                            'CountryCode' => $dest_address['country'] ?? 'US'
+                        )
+                    ),
+                    'ShipFrom' => array(
+                        'Address' => array(
+                            'AddressLine' => array( $origin_address['address_1'] ?? '' ),
+                            'City' => $origin_address['city'] ?? '',
+                            'StateProvinceCode' => $origin_address['state'] ?? '',
+                            'PostalCode' => $origin_zip,
+                            'CountryCode' => $origin_address['country'] ?? 'US'
+                        )
+                    ),
+                    'Service' => array(
+                        'Code' => $service_code
+                    ),
+                    'Package' => array(
+                        'PackagingType' => array(
+                            'Code' => '02' // Customer supplied package
+                        ),
+                        'PackageWeight' => array(
+                            'UnitOfMeasurement' => array(
+                                'Code' => 'LBS'
+                            ),
+                            'Weight' => (string) $weight
+                        )
+                    )
+                )
+            )
+        );
+
+        // Make API call
+        $url = $test_mode ? self::SANDBOX_URL : self::PRODUCTION_URL;
+
+        $headers = array(
+            'Content-Type' => 'application/json',
+            'AccessLicenseNumber' => $settings['ups_access_key'] ?? '',
+            'Username' => $settings['ups_user_id'] ?? '',
+            'Password' => $settings['ups_password'] ?? '',
+        );
+
+        $args = array(
+            'method' => 'POST',
+            'headers' => $headers,
+            'body' => wp_json_encode( $request_data ),
+            'timeout' => 10,
+            'sslverify' => ! $test_mode
+        );
+
+        $response = wp_remote_post( $url, $args );
+
+        if ( is_wp_error( $response ) ) {
+            return $response;
+        }
+
+        $response_code = wp_remote_retrieve_response_code( $response );
+        $response_body = wp_remote_retrieve_body( $response );
+
+        if ( 200 !== $response_code ) {
+            return new WP_Error(
+                'ups_api_error',
+                sprintf( __( 'UPS API returned error code: %d', 'epic-marks-shipping' ), $response_code )
+            );
+        }
+
+        $decoded = json_decode( $response_body, true );
+
+        if ( json_last_error() !== JSON_ERROR_NONE ) {
+            return new WP_Error( 'invalid_json', __( 'Invalid JSON response from UPS', 'epic-marks-shipping' ) );
+        }
+
+        // Parse response
+        if ( isset( $decoded['Fault'] ) || isset( $decoded['response']['errors'] ) ) {
+            $error_msg = $decoded['Fault']['detail']['Errors']['ErrorDetail']['PrimaryErrorCode']['Description']
+                ?? $decoded['response']['errors'][0]['message']
+                ?? __( 'Unknown UPS API error', 'epic-marks-shipping' );
+            return new WP_Error( 'ups_error', $error_msg );
+        }
+
+        if ( ! isset( $decoded['RateResponse']['RatedShipment'] ) ) {
+            return new WP_Error( 'no_rate', __( 'No rate returned from UPS', 'epic-marks-shipping' ) );
+        }
+
+        $shipment = $decoded['RateResponse']['RatedShipment'];
+
+        // Handle single result (not in array)
+        if ( isset( $shipment['Service'] ) ) {
+            $shipment = array( $shipment );
+        }
+
+        // Get the first (and should be only) result for this service
+        $rate_data = array(
+            'cost' => floatval( $shipment[0]['TotalCharges']['MonetaryValue'] ?? 0 ),
+            'transit_days' => intval( $shipment[0]['GuaranteedDelivery']['BusinessDaysInTransit'] ?? 5 ),
+            'service_code' => $service_code,
+            'service' => $service,
+        );
+
+        // Cache for 30 minutes
+        set_transient( $cache_key, $rate_data, 30 * MINUTE_IN_SECONDS );
+
+        return $rate_data;
+    }
+
+    /**
+     * Calculate total weight of package contents
+     *
+     * @param array $package WooCommerce package array
+     * @return float Weight in pounds
+     */
+    private static function calculate_package_weight( $package ) {
+        $weight = 0;
+
+        if ( isset( $package['contents'] ) && is_array( $package['contents'] ) ) {
+            foreach ( $package['contents'] as $item ) {
+                if ( isset( $item['data'] ) ) {
+                    $product = $item['data'];
+                    $qty = isset( $item['quantity'] ) ? intval( $item['quantity'] ) : 1;
+                    $item_weight = floatval( $product->get_weight() );
+                    $weight += $item_weight * $qty;
+                }
+            }
+        }
+
+        // Minimum 1 lb
+        return max( 1.0, $weight );
+    }
 }

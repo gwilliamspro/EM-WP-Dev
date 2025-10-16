@@ -1,0 +1,283 @@
+/**
+ * Location Admin Styles
+ *
+ * @package Epic_Marks_Shipping
+ */
+
+/* Locations Tab Header */
+.em-locations-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 20px;
+}
+
+.em-locations-header-left h2 {
+    margin-top: 0;
+}
+
+.em-locations-header-right {
+    margin-top: 5px;
+}
+
+.em-locations-header-right .button {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.em-locations-header-right .dashicons {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+}
+
+/* Empty State */
+.em-empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+.em-empty-state-icon {
+    font-size: 64px;
+    color: #ccc;
+    margin-bottom: 20px;
+}
+
+.em-empty-state-icon .dashicons {
+    width: 64px;
+    height: 64px;
+    font-size: 64px;
+}
+
+.em-empty-state h3 {
+    margin: 0 0 10px;
+    font-size: 20px;
+}
+
+.em-empty-state p {
+    margin: 10px 0;
+    color: #666;
+}
+
+.em-empty-state .button {
+    margin: 5px;
+}
+
+/* Locations Actions */
+.em-locations-actions {
+    margin-bottom: 15px;
+}
+
+.em-locations-actions .button {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.em-locations-actions .dashicons {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+}
+
+/* Locations Table */
+.em-locations-table {
+    margin-top: 15px;
+}
+
+.em-locations-table .column-name {
+    width: 20%;
+}
+
+.em-locations-table .column-type {
+    width: 12%;
+}
+
+.em-locations-table .column-address {
+    width: 25%;
+}
+
+.em-locations-table .column-group {
+    width: 12%;
+}
+
+.em-locations-table .column-capabilities {
+    width: 12%;
+}
+
+.em-locations-table .column-status {
+    width: 10%;
+}
+
+.em-locations-table .column-actions {
+    width: 9%;
+}
+
+.em-warehouse-code {
+    background: #f0f0f1;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: 11px;
+    color: #50575e;
+}
+
+/* Type Badges */
+.em-type-badge {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 3px;
+    font-size: 12px;
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+.em-type-store {
+    background: #d1ecf1;
+    color: #0c5460;
+}
+
+.em-type-warehouse {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.em-type-ssaw_warehouse {
+    background: #e2e3e5;
+    color: #383d41;
+}
+
+/* Status Badges */
+.em-status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 10px;
+    border-radius: 3px;
+    font-size: 12px;
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+.em-status-badge .dashicons {
+    width: 16px;
+    height: 16px;
+    font-size: 16px;
+}
+
+.em-status-active {
+    background: #d4edda;
+    color: #155724;
+}
+
+.em-status-inactive {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+/* Import Panel */
+.em-import-panel {
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 20px;
+    margin-top: 20px;
+}
+
+.em-import-panel h3 {
+    margin-top: 0;
+}
+
+.em-import-form .form-table {
+    margin-top: 0;
+}
+
+.em-import-format-help {
+    background: #f9f9f9;
+    border: 1px solid #e5e5e5;
+    border-radius: 4px;
+    padding: 15px;
+    margin: 20px 0;
+}
+
+.em-import-format-help h4 {
+    margin-top: 0;
+    font-size: 13px;
+}
+
+.em-import-format-help pre {
+    background: #fff;
+    border: 1px solid #ddd;
+    padding: 10px;
+    overflow-x: auto;
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+/* Location Edit Form */
+.em-location-edit .wp-heading-inline {
+    margin-right: 10px;
+}
+
+.em-location-form .required {
+    color: #d63638;
+}
+
+.em-location-form .form-table th {
+    width: 200px;
+    vertical-align: top;
+    padding-top: 15px;
+}
+
+.em-location-form .form-table td {
+    padding-top: 12px;
+    padding-bottom: 12px;
+}
+
+.em-location-form h2 {
+    margin-top: 30px;
+    margin-bottom: 10px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #ddd;
+}
+
+.em-location-form h2:first-of-type {
+    margin-top: 20px;
+}
+
+.em-location-form .submit {
+    margin-top: 30px;
+    padding-top: 20px;
+    border-top: 1px solid #ddd;
+}
+
+.em-location-form .submit .button {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.em-location-form .submit .dashicons {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+}
+
+/* Responsive */
+@media screen and (max-width: 782px) {
+    .em-locations-header {
+        flex-direction: column;
+    }
+    
+    .em-locations-header-right {
+        margin-top: 15px;
+    }
+    
+    .em-locations-table .column-group,
+    .em-locations-table .column-capabilities {
+        display: none;
+    }
+}

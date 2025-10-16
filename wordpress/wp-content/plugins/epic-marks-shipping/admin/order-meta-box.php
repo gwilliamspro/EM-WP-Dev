@@ -139,6 +139,26 @@ function em_render_pirateship_meta_box( $post_or_order ) {
                     </p>
                 <?php endif; ?>
                 
+                <?php
+                // Display SSAW warehouse info if available
+                $ssaw_warehouse_name = $order->get_meta( '_ssaw_warehouse_name', true );
+                $ssaw_warehouse_code = $order->get_meta( '_ssaw_warehouse_code', true );
+                
+                if ( $ssaw_warehouse_name || $ssaw_warehouse_code ) :
+                ?>
+                    <p style="margin:0 0 5px 0;font-size:12px;color:#0071a1;">
+                        <strong><?php esc_html_e( 'SSAW Warehouse:', 'epic-marks-shipping' ); ?></strong>
+                        <?php 
+                        if ( $ssaw_warehouse_name ) {
+                            echo esc_html( $ssaw_warehouse_name );
+                        }
+                        if ( $ssaw_warehouse_code ) {
+                            echo ' <code style="background:#f0f0f0;padding:2px 6px;border-radius:2px;">' . esc_html( $ssaw_warehouse_code ) . '</code>';
+                        }
+                        ?>
+                    </p>
+                <?php endif; ?>
+                
                 <?php if ( $method_type === 'local_pickup' ) : ?>
                     <p style="margin:0 0 5px 0;font-size:12px;color:#2c7a2c;">
                         <strong><?php esc_html_e( '✓ Local Pickup', 'epic-marks-shipping' ); ?></strong>

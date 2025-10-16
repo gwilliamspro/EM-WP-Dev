@@ -119,28 +119,64 @@ class EM_UPS_Shipping_Method extends WC_Shipping_Method {
             return;
         }
 
-        // Check free shipping threshold
-        $cart_total = WC()->cart->get_subtotal();
-        $free_threshold = floatval( $this->settings_data['free_shipping_threshold'] ?? 0 );
+        // Evaluate free shipping rules
+        $rule_actions = EM_Shipping_Rule_Engine::evaluate_rules( WC()->cart, $package );
+        $free_shipping_enabled = false;
+        $free_services = array();
+
+        if ( $rule_actions && isset( $rule_actions['free_shipping'] ) && $rule_actions['free_shipping'] ) {
+            $free_shipping_enabled = true;
+            $free_services = $rule_actions['applies_to_services'] ?? array();
+        }
+
+        // Calculate transparent fees (once for all rates)
+        $fees = EM_Shipping_Fee_Calculator::calculate_fees( $package, $profile );
+        $transparent_fees_total = EM_Shipping_Fee_Calculator::get_total_transparent_fees( $fees );
 
         // Add shipping rates
         foreach ( $rates as $rate ) {
             $cost = $rate['cost'];
 
-            // Apply free shipping if threshold met
-            if ( $free_threshold > 0 && $cart_total >= $free_threshold ) {
-                $cost = 0;
+            // Apply free shipping if rule matches and service is eligible
+            if ( $free_shipping_enabled ) {
+                $service_eligible = empty( $free_services ) || in_array( $rate['code'], $free_services, true );
+                if ( $service_eligible ) {
+                    $cost = 0;
+                }
             }
+
+            // Calculate delivery estimate
+            $location_config = EM_Location_Manager::get_location_by_id( $location );
+            $delivery_estimate = null;
+            $delivery_label = '';
+
+            if ( $location_config ) {
+                $delivery_estimate = EM_Delivery_Estimator::estimate(
+                    $location_config,
+                    $rate['code'],
+                    $package['destination'],
+                    $rate['transit_days'] ?? null
+                );
+
+                if ( ! empty( $delivery_estimate['delivery_range'] ) ) {
+                    $delivery_label = ' (' . $delivery_estimate['delivery_range'] . ')';
+                }
+            }
+
+            // Add fees to cost (unless free shipping)
+            $final_cost = $cost + ( $cost === 0 ? 0 : $transparent_fees_total );
 
             $this->add_rate( array(
                 'id'        => $this->id . '_' . $rate['code'],
-                'label'     => $rate['service'],
-                'cost'      => $cost,
+                'label'     => $rate['service'] . $delivery_label,
+                'cost'      => $final_cost,
                 'meta_data' => array(
                     'service_code'          => $rate['code'],
                     'profile_id'            => $profile->id,
                     'location'              => $location,
-                    'free_shipping_applied' => ( $cost === 0 && $free_threshold > 0 && $cart_total >= $free_threshold ),
+                    'free_shipping_applied' => ( $cost === 0 && $free_shipping_enabled ),
+                    'delivery_estimate'     => $delivery_estimate,
+                    'fees'                  => $fees,
                 ),
             ) );
         }
@@ -187,26 +223,72 @@ class EM_UPS_Shipping_Method extends WC_Shipping_Method {
         // Combine rates from multiple profiles
         $final_rates = $this->combine_rates( $all_rates );
 
-        // Check free shipping threshold
-        $cart_total = WC()->cart->get_subtotal();
-        $free_threshold = floatval( $this->settings_data['free_shipping_threshold'] ?? 0 );
+        // Evaluate free shipping rules
+        $rule_actions = EM_Shipping_Rule_Engine::evaluate_rules( WC()->cart, $package );
+        $free_shipping_enabled = false;
+        $free_services = array();
+
+        if ( $rule_actions && isset( $rule_actions['free_shipping'] ) && $rule_actions['free_shipping'] ) {
+            $free_shipping_enabled = true;
+            $free_services = $rule_actions['applies_to_services'] ?? array();
+        }
+
+        // Calculate transparent fees (once for all rates)
+        $fees = EM_Shipping_Fee_Calculator::calculate_fees( $package, null );
+        $transparent_fees_total = EM_Shipping_Fee_Calculator::get_total_transparent_fees( $fees );
 
         // Add rates to WooCommerce
         foreach ( $final_rates as $rate ) {
             $cost = $rate['cost'];
 
-            // Apply free shipping if threshold met
-            if ( $free_threshold > 0 && $cart_total >= $free_threshold ) {
-                $cost = 0;
+            // Apply free shipping if rule matches and service is eligible
+            if ( $free_shipping_enabled ) {
+                $service_eligible = empty( $free_services ) || in_array( $rate['code'], $free_services, true );
+                if ( $service_eligible ) {
+                    $cost = 0;
+                }
             }
+
+            // Calculate delivery estimate (use first location from grouped products)
+            $first_profile_data = reset( $grouped_products );
+            $delivery_estimate = null;
+            $delivery_label = '';
+
+            if ( $first_profile_data && isset( $first_profile_data['profile'] ) ) {
+                $first_profile = $first_profile_data['profile'];
+                $fulfillment_locations = $first_profile->fulfillment_locations ?? array();
+                
+                if ( ! empty( $fulfillment_locations ) ) {
+                    $first_location_id = is_array( $fulfillment_locations ) ? reset( $fulfillment_locations ) : $fulfillment_locations;
+                    $location_config = EM_Location_Manager::get_location_by_id( $first_location_id );
+
+                    if ( $location_config ) {
+                        $delivery_estimate = EM_Delivery_Estimator::estimate(
+                            $location_config,
+                            $rate['code'],
+                            $package['destination'],
+                            $rate['transit_days'] ?? null
+                        );
+
+                        if ( ! empty( $delivery_estimate['delivery_range'] ) ) {
+                            $delivery_label = ' (' . $delivery_estimate['delivery_range'] . ')';
+                        }
+                    }
+                }
+            }
+
+            // Add fees to cost (unless free shipping)
+            $final_cost = $cost + ( $cost === 0 ? 0 : $transparent_fees_total );
 
             $this->add_rate( array(
                 'id' => $this->id . '_' . $rate['code'],
-                'label' => $rate['service'],
-                'cost' => $cost,
+                'label' => $rate['service'] . $delivery_label,
+                'cost' => $final_cost,
                 'meta_data' => array(
                     'service_code' => $rate['code'],
-                    'free_shipping_applied' => ( $cost === 0 && $free_threshold > 0 && $cart_total >= $free_threshold )
+                    'free_shipping_applied' => ( $cost === 0 && $free_shipping_enabled ),
+                    'delivery_estimate' => $delivery_estimate,
+                    'fees' => $fees,
                 )
             ) );
         }
@@ -233,8 +315,8 @@ class EM_UPS_Shipping_Method extends WC_Shipping_Method {
                 continue;
             }
 
-            // Calculate total weight
-            $total_weight = $this->calculate_weight( $location_products );
+            // Calculate weight with dimensional weight consideration
+            $total_weight = $this->calculate_weight_with_dim( $location_products, $package );
 
             // Build API request parameters
             $params = array(
@@ -370,6 +452,35 @@ class EM_UPS_Shipping_Method extends WC_Shipping_Method {
         }
         
         return $total;
+    }
+
+    /**
+     * Calculate weight with dimensional weight consideration
+     *
+     * @param array $products Products array
+     * @param array $package Optional package data for box selection
+     * @return float Billable weight in pounds
+     */
+    private function calculate_weight_with_dim( $products, $package = array() ) {
+        // Calculate actual weight
+        $actual_weight = 0;
+
+        foreach ( $products as $item ) {
+            $weight = isset( $item['weight'] ) && $item['weight'] > 0 ? $item['weight'] : 1;
+            $quantity = isset( $item['quantity'] ) ? $item['quantity'] : 1;
+            $actual_weight += $weight * $quantity;
+        }
+
+        // Get box for these items
+        $box = EM_Package_Splitter::get_package_box( $products, $package );
+
+        if ( $box ) {
+            // Use billable weight (max of actual or dimensional)
+            return EM_Box_Manager::get_billable_weight( $actual_weight, $box );
+        }
+
+        // No box - return actual weight
+        return $actual_weight;
     }
     
     /**

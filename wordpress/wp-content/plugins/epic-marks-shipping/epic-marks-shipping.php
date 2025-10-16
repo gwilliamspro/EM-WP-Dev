@@ -3,7 +3,7 @@
  * Plugin Name: Epic Marks Shipping
  * Plugin URI: https://epicmarks.com
  * Description: Custom UPS real-time shipping rates with multi-location support and PirateShip integration
- * Version: 2.0.0
+ * Version: 2.3.0
  * Author: Epic Marks
  * Author URI: https://epicmarks.com
  * Requires at least: 5.8
@@ -22,7 +22,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 // Define plugin constants
-define( 'EM_SHIPPING_VERSION', '2.0.0' );
+define( 'EM_SHIPPING_VERSION', '2.3.0' );
 define( 'EM_SHIPPING_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'EM_SHIPPING_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
 define( 'EM_SHIPPING_PLUGIN_BASENAME', plugin_basename( __FILE__ ) );
@@ -58,7 +58,13 @@ function em_shipping_init() {
 	}
 
 	// Load plugin classes (core)
+	require_once EM_SHIPPING_PLUGIN_DIR . 'includes/class-location-manager.php';
 	require_once EM_SHIPPING_PLUGIN_DIR . 'includes/class-ups-api.php';
+	require_once EM_SHIPPING_PLUGIN_DIR . 'includes/class-ssaw-warehouse-selector.php';
+	require_once EM_SHIPPING_PLUGIN_DIR . 'includes/class-shipping-rule-engine.php';
+	require_once EM_SHIPPING_PLUGIN_DIR . 'includes/class-box-manager.php';
+	require_once EM_SHIPPING_PLUGIN_DIR . 'includes/class-delivery-estimator.php';
+	require_once EM_SHIPPING_PLUGIN_DIR . 'includes/class-shipping-fee-calculator.php';
 	require_once EM_SHIPPING_PLUGIN_DIR . 'includes/class-shipping-profile.php';
 	require_once EM_SHIPPING_PLUGIN_DIR . 'includes/class-profile-manager.php';
 	require_once EM_SHIPPING_PLUGIN_DIR . 'includes/class-profile-rate-calculator.php';
@@ -76,6 +82,20 @@ function em_shipping_init() {
 }
 add_action( 'plugins_loaded', 'em_shipping_init' );
 
+
+/**
+ * Run plugin migrations on admin_init
+ */
+function em_shipping_run_migrations() {
+	// Only run in admin
+	if ( ! is_admin() ) {
+		return;
+	}
+
+	// Run free shipping threshold migration
+	EM_Shipping_Rule_Engine::migrate_free_shipping_threshold();
+}
+add_action( 'admin_init', 'em_shipping_run_migrations' );
 /**
  * Register the shipping method with WooCommerce
  */
@@ -335,6 +355,32 @@ function em_shipping_deactivate() {
 	$wpdb->query( "DELETE FROM {$wpdb->options} WHERE option_name LIKE '_transient_timeout_em_ups_rate_%'" );
 }
 register_deactivation_hook( __FILE__, 'em_shipping_deactivate' );
+
+
+/**
+ * Save SSAW warehouse info to order meta when order is created
+ */
+function em_save_ssaw_warehouse_to_order( $order_id ) {
+    $order = wc_get_order( $order_id );
+    if ( ! $order ) {
+        return;
+    }
+
+    // Get warehouse info from session (set during rate calculation)
+    $ssaw_warehouse = WC()->session->get( 'em_last_ssaw_warehouse' );
+    
+    if ( $ssaw_warehouse && is_array( $ssaw_warehouse ) ) {
+        // Save warehouse info to order meta
+        $order->update_meta_data( '_ssaw_warehouse_used', $ssaw_warehouse['id'] ?? '' );
+        $order->update_meta_data( '_ssaw_warehouse_code', $ssaw_warehouse['warehouse_code'] ?? '' );
+        $order->update_meta_data( '_ssaw_warehouse_name', $ssaw_warehouse['name'] ?? '' );
+        $order->save();
+        
+        // Clear session data
+        WC()->session->__unset( 'em_last_ssaw_warehouse' );
+    }
+}
+add_action( 'woocommerce_checkout_order_processed', 'em_save_ssaw_warehouse_to_order', 10, 1 );
 
 /**
  * Declare HPOS compatibility

@@ -1,5 +1,55 @@
 # Epic Marks Shipping Plugin - Changelog
 
+## Version 2.3.0 - 2025-10-16
+
+### What Changed
+- Delivery date estimation with business day calculator (skips weekends and holidays)
+- Transparent fee line items (fragile handling, overweight, signature required)
+- Cutoff time aware processing (orders after 2 PM ship next business day)
+- Holiday calendar integration (store-specific closures + carrier holidays)
+
+### Why
+- Customers need delivery expectations at checkout to plan accordingly
+- Transparent fees build trust vs hidden markups (compliance, customer satisfaction)
+- Accurate delivery windows reduce "where's my order?" support tickets
+- Holiday-aware estimates prevent customer disappointment during peak seasons
+
+---
+
+## Version 2.2.0 - 2025-10-16
+
+### What Changed
+- Intelligent order routing: calculate ship-together vs split-shipment costs
+- Customer choice at checkout with recommended option pre-selected
+- Cost comparison display shows savings for recommended routing
+- Order meta tracking for routing selection and fulfillment breakdown
+
+### Why
+- Mixed carts (store + warehouse items) previously forced split shipments
+- Ship-together option saves customer money when cost-effective
+- Recommended badge guides customers to best value without forcing choice
+- Routing analytics help optimize fulfillment strategy over time
+
+---
+
+## Version 2.1.0 - 2025-10-16
+
+### What Changed
+- Dynamic location management system (unlimited locations vs 2 hardcoded)
+- SSAW multi-warehouse network with cheapest-warehouse selection
+- Conditional free shipping rules engine (profile + order total + tags)
+- Box configuration with dimensional weight calculation
+- CSV/JSON import for SSAW warehouse addresses
+
+### Why
+- 3rd location (South Austin store) launch blocked by 2-location limit
+- SSAW ships from multiple warehouses - need accurate origin for UPS rates
+- Business requires different free shipping rules per product type (SSAW >$300, DTF >$50)
+- Dimensional weight critical for accurate rates (DTF rolls, large boxes)
+- Admin needs scalable system as business adds warehouses/stores
+
+---
+
 ## Version 2.0.0 - 2025-10-15
 
 ### What Changed
@@ -39,4 +89,3 @@ None - fully backward compatible. Products without profile assignment fall back 
 - Product-specific shipping markup configuration
 - PirateShip deep link integration for label purchase
 - Basic admin settings page with UPS credentials and addresses
-

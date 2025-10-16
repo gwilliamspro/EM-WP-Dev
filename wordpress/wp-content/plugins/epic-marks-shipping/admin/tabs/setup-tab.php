@@ -1,6 +1,6 @@
 <?php
 /**
- * Setup Tab - UPS Credentials & Locations
+ * Setup Tab - UPS Credentials & Global Settings
  *
  * @package Epic_Marks_Shipping
  */
@@ -11,10 +11,37 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 $settings = get_option( 'em_ups_settings', array() );
+$locations = EM_Location_Manager::get_all_locations();
 ?>
 
 <form method="post" action="options.php" class="em-shipping-settings-form">
     <?php settings_fields( 'em_ups_settings_group' ); ?>
+    
+    <?php if ( empty( $locations ) ) : ?>
+        <div class="notice notice-warning">
+            <p>
+                <strong><?php esc_html_e( 'Location Configuration Required:', 'epic-marks-shipping' ); ?></strong>
+                <?php esc_html_e( 'No shipping locations configured.', 'epic-marks-shipping' ); ?>
+                <a href="<?php echo esc_url( admin_url( 'admin.php?page=em-ups-shipping&tab=locations' ) ); ?>" class="button button-primary button-small" style="margin-left: 10px;">
+                    <?php esc_html_e( 'Configure Locations', 'epic-marks-shipping' ); ?>
+                </a>
+            </p>
+        </div>
+    <?php else : ?>
+        <div class="notice notice-info" style="position: relative;">
+            <p>
+                <span class="dashicons dashicons-location" style="color: #2271b1; margin-right: 5px;"></span>
+                <strong><?php esc_html_e( 'Shipping Locations:', 'epic-marks-shipping' ); ?></strong>
+                <?php
+                printf(
+                    esc_html__( 'You have %s configured. Manage locations in the %s tab.', 'epic-marks-shipping' ),
+                    '<strong>' . count( $locations ) . ' ' . _n( 'location', 'locations', count( $locations ), 'epic-marks-shipping' ) . '</strong>',
+                    '<a href="' . esc_url( admin_url( 'admin.php?page=em-ups-shipping&tab=locations' ) ) . '">' . esc_html__( 'Locations', 'epic-marks-shipping' ) . '</a>'
+                );
+                ?>
+            </p>
+        </div>
+    <?php endif; ?>
     
     <h2><?php esc_html_e( 'General Settings', 'epic-marks-shipping' ); ?></h2>
     <table class="form-table">
@@ -88,82 +115,11 @@ $settings = get_option( 'em_ups_settings', array() );
         </tr>
     </table>
     
-    <h2><?php esc_html_e( 'Shipping Locations', 'epic-marks-shipping' ); ?></h2>
-    <p class="description"><?php esc_html_e( 'Products are assigned to locations based on tags: "SSAW-App" for warehouse, "available-in-store" for retail store.', 'epic-marks-shipping' ); ?></p>
-    
-    <h3><?php esc_html_e( 'Warehouse Address', 'epic-marks-shipping' ); ?></h3>
-    <table class="form-table">
-        <tr>
-            <th scope="row"><label for="warehouse_address"><?php esc_html_e( 'Street Address', 'epic-marks-shipping' ); ?></label></th>
-            <td><input type="text" id="warehouse_address" name="em_ups_settings[warehouse_address]" value="<?php echo esc_attr( $settings['warehouse_address'] ?? '' ); ?>" class="regular-text"></td>
-        </tr>
-        <tr>
-            <th scope="row"><label for="warehouse_city"><?php esc_html_e( 'City', 'epic-marks-shipping' ); ?></label></th>
-            <td><input type="text" id="warehouse_city" name="em_ups_settings[warehouse_city]" value="<?php echo esc_attr( $settings['warehouse_city'] ?? '' ); ?>" class="regular-text"></td>
-        </tr>
-        <tr>
-            <th scope="row"><label for="warehouse_state"><?php esc_html_e( 'State', 'epic-marks-shipping' ); ?></label></th>
-            <td><input type="text" id="warehouse_state" name="em_ups_settings[warehouse_state]" value="<?php echo esc_attr( $settings['warehouse_state'] ?? '' ); ?>" class="regular-text" placeholder="CA" maxlength="2"></td>
-        </tr>
-        <tr>
-            <th scope="row"><label for="warehouse_zip"><?php esc_html_e( 'ZIP Code', 'epic-marks-shipping' ); ?></label></th>
-            <td><input type="text" id="warehouse_zip" name="em_ups_settings[warehouse_zip]" value="<?php echo esc_attr( $settings['warehouse_zip'] ?? '' ); ?>" class="regular-text"></td>
-        </tr>
-    </table>
-    
-    <h3><?php esc_html_e( 'Retail Store Address', 'epic-marks-shipping' ); ?></h3>
-    <table class="form-table">
-        <tr>
-            <th scope="row"><label for="store_address"><?php esc_html_e( 'Street Address', 'epic-marks-shipping' ); ?></label></th>
-            <td><input type="text" id="store_address" name="em_ups_settings[store_address]" value="<?php echo esc_attr( $settings['store_address'] ?? '' ); ?>" class="regular-text"></td>
-        </tr>
-        <tr>
-            <th scope="row"><label for="store_city"><?php esc_html_e( 'City', 'epic-marks-shipping' ); ?></label></th>
-            <td><input type="text" id="store_city" name="em_ups_settings[store_city]" value="<?php echo esc_attr( $settings['store_city'] ?? '' ); ?>" class="regular-text"></td>
-        </tr>
-        <tr>
-            <th scope="row"><label for="store_state"><?php esc_html_e( 'State', 'epic-marks-shipping' ); ?></label></th>
-            <td><input type="text" id="store_state" name="em_ups_settings[store_state]" value="<?php echo esc_attr( $settings['store_state'] ?? '' ); ?>" class="regular-text" placeholder="CA" maxlength="2"></td>
-        </tr>
-        <tr>
-            <th scope="row"><label for="store_zip"><?php esc_html_e( 'ZIP Code', 'epic-marks-shipping' ); ?></label></th>
-            <td><input type="text" id="store_zip" name="em_ups_settings[store_zip]" value="<?php echo esc_attr( $settings['store_zip'] ?? '' ); ?>" class="regular-text"></td>
-        </tr>
-    </table>
-    
-    <h2><?php esc_html_e( 'Location Settings', 'epic-marks-shipping' ); ?></h2>
-    <table class="form-table">
-        <tr>
-            <th scope="row">
-                <label for="overlap_preference"><?php esc_html_e( 'Overlap Preference', 'epic-marks-shipping' ); ?></label>
-            </th>
-            <td>
-                <select id="overlap_preference" name="em_ups_settings[overlap_preference]">
-                    <option value="warehouse" <?php selected( $settings['overlap_preference'] ?? 'warehouse', 'warehouse' ); ?>><?php esc_html_e( 'Warehouse', 'epic-marks-shipping' ); ?></option>
-                    <option value="store" <?php selected( $settings['overlap_preference'] ?? 'warehouse', 'store' ); ?>><?php esc_html_e( 'Store', 'epic-marks-shipping' ); ?></option>
-                </select>
-                <p class="description"><?php esc_html_e( 'When a product has both "SSAW-App" and "available-in-store" tags, ship from:', 'epic-marks-shipping' ); ?></p>
-            </td>
-        </tr>
-        <tr>
-            <th scope="row">
-                <label for="default_location"><?php esc_html_e( 'Default Location', 'epic-marks-shipping' ); ?></label>
-            </th>
-            <td>
-                <select id="default_location" name="em_ups_settings[default_location]">
-                    <option value="warehouse" <?php selected( $settings['default_location'] ?? 'warehouse', 'warehouse' ); ?>><?php esc_html_e( 'Warehouse', 'epic-marks-shipping' ); ?></option>
-                    <option value="store" <?php selected( $settings['default_location'] ?? 'warehouse', 'store' ); ?>><?php esc_html_e( 'Store', 'epic-marks-shipping' ); ?></option>
-                </select>
-                <p class="description"><?php esc_html_e( 'When a product has no location tags, ship from:', 'epic-marks-shipping' ); ?></p>
-            </td>
-        </tr>
-    </table>
-    
     <h2><?php esc_html_e( 'Services & Options', 'epic-marks-shipping' ); ?></h2>
     <table class="form-table">
         <tr>
             <th scope="row">
-                <label><?php esc_html_e( 'UPS Services', 'epic-marks-shipping' ); ?></label>
+                <label><?php esc_html_e( 'Default UPS Services', 'epic-marks-shipping' ); ?></label>
             </th>
             <td>
                 <?php
@@ -180,6 +136,7 @@ $settings = get_option( 'em_ups_settings', array() );
                         <?php echo esc_html( $name ); ?>
                     </label>
                 <?php endforeach; ?>
+                <p class="description"><?php esc_html_e( 'Default services for new locations. Individual locations can override this in the Locations tab.', 'epic-marks-shipping' ); ?></p>
             </td>
         </tr>
         <tr>
@@ -188,7 +145,11 @@ $settings = get_option( 'em_ups_settings', array() );
             </th>
             <td>
                 <input type="number" id="free_shipping_threshold" name="em_ups_settings[free_shipping_threshold]" value="<?php echo esc_attr( $settings['free_shipping_threshold'] ?? '' ); ?>" step="0.01" min="0" class="small-text">
-                <p class="description"><?php esc_html_e( 'Cart total required for free shipping (leave empty to disable)', 'epic-marks-shipping' ); ?></p>
+                <p class="description">
+                    <?php esc_html_e( 'Cart total required for free shipping (leave empty to disable)', 'epic-marks-shipping' ); ?>
+                    <br>
+                    <em><?php esc_html_e( 'Note: This will be replaced by conditional rules in a future update for more flexible free shipping logic.', 'epic-marks-shipping' ); ?></em>
+                </p>
             </td>
         </tr>
         <tr>

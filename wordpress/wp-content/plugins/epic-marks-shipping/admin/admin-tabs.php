@@ -17,6 +17,11 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 function em_shipping_get_tabs() {
     return array(
+        'locations' => array(
+            'label' => __( 'Locations', 'epic-marks-shipping' ),
+            'icon'  => 'dashicons-location',
+            'file'  => 'locations-tab.php',
+        ),
         'setup' => array(
             'label' => __( 'Setup', 'epic-marks-shipping' ),
             'icon'  => 'dashicons-admin-generic',
@@ -26,6 +31,11 @@ function em_shipping_get_tabs() {
             'label' => __( 'Profiles', 'epic-marks-shipping' ),
             'icon'  => 'dashicons-list-view',
             'file'  => 'profiles-tab.php',
+        ),
+        'rules' => array(
+            'label' => __( 'Rules', 'epic-marks-shipping' ),
+            'icon'  => 'dashicons-yes-alt',
+            'file'  => 'rules-tab.php',
         ),
         'routing' => array(
             'label' => __( 'Routing', 'epic-marks-shipping' ),
@@ -50,11 +60,11 @@ function em_shipping_get_tabs() {
  */
 function em_shipping_get_current_tab() {
     $tabs = em_shipping_get_tabs();
-    $current = isset( $_GET['tab'] ) ? sanitize_key( $_GET['tab'] ) : 'setup';
+    $current = isset( $_GET['tab'] ) ? sanitize_key( $_GET['tab'] ) : 'locations';
 
     // Validate tab exists
     if ( ! isset( $tabs[ $current ] ) ) {
-        $current = 'setup';
+        $current = 'locations';
     }
 
     return $current;
@@ -99,11 +109,38 @@ function em_shipping_render_tab_content() {
         return;
     }
 
+    // Check for location edit/new action
+    if ( $current_tab === 'locations' && isset( $_GET['action'] ) && in_array( $_GET['action'], array( 'edit', 'new' ) ) ) {
+        $location_edit_file = EM_SHIPPING_PLUGIN_DIR . 'admin/location-edit.php';
+        if ( file_exists( $location_edit_file ) ) {
+            include $location_edit_file;
+            return;
+        }
+    }
+
     // Check for profile edit/new action
     if ( $current_tab === 'profiles' && isset( $_GET['action'] ) && in_array( $_GET['action'], array( 'edit', 'new' ) ) ) {
         $profile_edit_file = EM_SHIPPING_PLUGIN_DIR . 'admin/profile-edit.php';
         if ( file_exists( $profile_edit_file ) ) {
             include $profile_edit_file;
+            return;
+        }
+    }
+
+    // Check for rule edit/new action
+    if ( $current_tab === 'rules' && isset( $_GET['action'] ) && in_array( $_GET['action'], array( 'edit', 'new' ) ) ) {
+        $rule_edit_file = EM_SHIPPING_PLUGIN_DIR . 'admin/rule-edit.php';
+        if ( file_exists( $rule_edit_file ) ) {
+            include $rule_edit_file;
+            return;
+        }
+    }
+
+    // Check for box edit/new action
+    if ( $current_tab === 'package-control' && isset( $_GET['action'] ) && in_array( $_GET['action'], array( 'edit', 'new' ) ) ) {
+        $box_edit_file = EM_SHIPPING_PLUGIN_DIR . 'admin/box-edit.php';
+        if ( file_exists( $box_edit_file ) ) {
+            include $box_edit_file;
             return;
         }
     }
@@ -133,8 +170,38 @@ function em_shipping_enqueue_tab_styles( $hook ) {
         EM_SHIPPING_VERSION
     );
 
-    // Enqueue profile admin JS on profiles tab
+    // Get current tab
     $current_tab = em_shipping_get_current_tab();
+
+    // Enqueue location admin JS and CSS on locations tab
+    if ( $current_tab === 'locations' ) {
+        wp_enqueue_script(
+            'em-shipping-location-admin',
+            EM_SHIPPING_PLUGIN_URL . 'assets/location-admin.js',
+            array( 'jquery' ),
+            EM_SHIPPING_VERSION,
+            true
+        );
+        
+        wp_localize_script(
+            'em-shipping-location-admin',
+            'emLocationAdmin',
+            array(
+                'nonce' => wp_create_nonce( 'em_location_nonce' ),
+                'ajaxurl' => admin_url( 'admin-ajax.php' ),
+                'confirmDelete' => __( 'Are you sure you want to delete this location? This action cannot be undone.', 'epic-marks-shipping' ),
+            )
+        );
+
+        wp_enqueue_style(
+            'em-shipping-location-admin',
+            EM_SHIPPING_PLUGIN_URL . 'assets/location-admin.css',
+            array(),
+            EM_SHIPPING_VERSION
+        );
+    }
+
+    // Enqueue profile admin JS on profiles tab
     if ( $current_tab === 'profiles' ) {
         wp_enqueue_script(
             'em-shipping-profile-admin',
@@ -142,6 +209,24 @@ function em_shipping_enqueue_tab_styles( $hook ) {
             array( 'jquery' ),
             EM_SHIPPING_VERSION,
             true
+        );
+    }
+
+    // Enqueue rule admin JS and CSS on rules tab
+    if ( $current_tab === 'rules' ) {
+        wp_enqueue_script(
+            'em-shipping-rule-admin',
+            EM_SHIPPING_PLUGIN_URL . 'assets/rule-admin.js',
+            array( 'jquery' ),
+            EM_SHIPPING_VERSION,
+            true
+        );
+
+        wp_enqueue_style(
+            'em-shipping-rule-admin',
+            EM_SHIPPING_PLUGIN_URL . 'assets/rule-admin.css',
+            array(),
+            EM_SHIPPING_VERSION
         );
     }
 }

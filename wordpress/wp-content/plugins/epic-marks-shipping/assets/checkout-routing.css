@@ -1,0 +1,242 @@
+/**
+ * Checkout Routing Options Styles
+ *
+ * @package EpicMarksShipping
+ * @since 2.2.0
+ */
+
+/* Main container */
+.em-shipping-routing-options {
+	background: #f9f9f9;
+	border: 1px solid #ddd;
+	border-radius: 4px;
+	padding: 20px;
+	margin: 20px 0;
+}
+
+.em-shipping-routing-options h3 {
+	margin-top: 0;
+	margin-bottom: 10px;
+	font-size: 18px;
+	color: #333;
+}
+
+.em-routing-description {
+	font-size: 14px;
+	color: #666;
+	margin-bottom: 15px;
+}
+
+/* Options list */
+.em-routing-options-list {
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+	margin-bottom: 15px;
+}
+
+/* Individual option */
+.em-routing-option {
+	background: #fff;
+	border: 2px solid #ddd;
+	border-radius: 6px;
+	transition: all 0.2s ease;
+	cursor: pointer;
+}
+
+.em-routing-option:hover {
+	border-color: #999;
+	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.em-routing-option.selected {
+	border-color: #2271b1;
+	background: #f0f6fc;
+	box-shadow: 0 2px 6px rgba(34, 113, 177, 0.15);
+}
+
+/* Option label */
+.em-routing-option-label {
+	display: block;
+	padding: 16px;
+	cursor: pointer;
+	margin: 0;
+}
+
+.em-routing-radio {
+	margin: 0 12px 0 0;
+	vertical-align: middle;
+	cursor: pointer;
+}
+
+/* Option content */
+.em-routing-option-content {
+	display: inline-block;
+	width: calc(100% - 30px);
+	vertical-align: middle;
+}
+
+/* Option header */
+.em-routing-option-header {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	margin-bottom: 8px;
+}
+
+.em-routing-option-title {
+	font-size: 16px;
+	font-weight: 600;
+	color: #333;
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.em-routing-option-cost {
+	font-size: 18px;
+	font-weight: 700;
+	color: #2271b1;
+}
+
+.em-routing-option.selected .em-routing-option-cost {
+	color: #135e96;
+}
+
+/* Recommended badge */
+.em-routing-recommended-badge {
+	display: inline-block;
+	background: #ffa500;
+	color: #fff;
+	padding: 2px 8px;
+	border-radius: 12px;
+	font-size: 12px;
+	font-weight: 600;
+	vertical-align: middle;
+}
+
+/* Option description */
+.em-routing-option-description {
+	display: block;
+	font-size: 14px;
+	color: #666;
+	margin-bottom: 6px;
+}
+
+/* Delivery info */
+.em-routing-option-delivery {
+	display: block;
+	font-size: 13px;
+	color: #0071a1;
+	font-style: italic;
+}
+
+/* Package breakdown */
+.em-routing-option-breakdown {
+	margin-top: 12px;
+	padding-top: 12px;
+	border-top: 1px solid #e0e0e0;
+}
+
+.em-package-breakdown-list {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+}
+
+.em-package-breakdown-list li {
+	font-size: 13px;
+	color: #666;
+	padding: 4px 0;
+	padding-left: 20px;
+	position: relative;
+}
+
+.em-package-breakdown-list li:before {
+	content: "•";
+	position: absolute;
+	left: 5px;
+	color: #999;
+}
+
+/* Savings indicator */
+.em-routing-savings {
+	background: #d4edda;
+	border: 1px solid #c3e6cb;
+	border-radius: 4px;
+	padding: 10px 12px;
+	margin: 12px 0 0 0;
+	font-size: 14px;
+	color: #155724;
+	font-weight: 600;
+	text-align: center;
+}
+
+/* Loading indicator */
+.em-routing-loading {
+	text-align: center;
+	padding: 15px;
+	font-size: 14px;
+	color: #666;
+}
+
+.em-routing-loading .spinner {
+	float: none;
+	margin: 0 8px 0 0;
+	vertical-align: middle;
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+	.em-shipping-routing-options {
+		padding: 15px;
+		margin: 15px 0;
+	}
+
+	.em-routing-option-header {
+		flex-direction: column;
+		align-items: flex-start;
+		gap: 6px;
+	}
+
+	.em-routing-option-cost {
+		font-size: 16px;
+	}
+
+	.em-routing-option-title {
+		font-size: 15px;
+	}
+
+	.em-routing-recommended-badge {
+		font-size: 11px;
+		padding: 2px 6px;
+	}
+}
+
+/* Accessibility */
+.em-routing-radio:focus {
+	outline: 2px solid #2271b1;
+	outline-offset: 2px;
+}
+
+.em-routing-option-label:focus-within {
+	outline: 2px solid #2271b1;
+	outline-offset: 2px;
+	border-radius: 6px;
+}
+
+/* Print styles */
+@media print {
+	.em-shipping-routing-options {
+		border: 1px solid #000;
+		background: #fff;
+	}
+
+	.em-routing-option {
+		border: 1px solid #000;
+	}
+
+	.em-routing-option.selected {
+		background: #f0f0f0;
+	}
+}
